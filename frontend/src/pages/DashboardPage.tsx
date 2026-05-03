@@ -16,7 +16,7 @@ export const DashboardPage: React.FC = () => {
   const [severityFilter, setSeverityFilter] = useState<string>(searchParams.get('severity') || 'all');
   const [tagFilter, setTagFilter] = useState<string>(searchParams.get('component') || 'all');
   const [lastUpdated, setLastUpdated] = useState<string>('---');
-  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [autoRefresh, setAutoRefresh] = useState(false);
 
   useEffect(() => {
     fetchIncidents();
