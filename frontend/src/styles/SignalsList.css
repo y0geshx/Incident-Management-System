@@ -1,0 +1,150 @@
+.signals-list {
+  background: #f5f7fa;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.signals-list h3 {
+  font-size: 18px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.signals-loading,
+.signals-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+  background: white;
+  border-radius: 8px;
+}
+
+.signals-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.signal-item {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  transition: all 0.3s ease;
+}
+
+.signal-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #667eea;
+}
+
+.signal-header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.signal-severity {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.signal-severity.p0 {
+  background: rgba(211, 47, 47, 0.2);
+  color: #d32f2f;
+}
+
+.signal-severity.p1 {
+  background: rgba(245, 127, 23, 0.2);
+  color: #f57c00;
+}
+
+.signal-severity.p2 {
+  background: rgba(251, 192, 45, 0.2);
+  color: #fbc02d;
+}
+
+.signal-severity.p3 {
+  background: rgba(25, 118, 210, 0.2);
+  color: #1976d2;
+}
+
+.signal-code {
+  font-family: 'Courier New', monospace;
+  background: #f5f7fa;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #667eea;
+}
+
+.signal-time {
+  font-size: 12px;
+  color: #999;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.signal-message {
+  font-size: 14px;
+  color: #333;
+  word-break: break-word;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.signal-latency {
+  font-size: 12px;
+  color: #667eea;
+  padding: 8px;
+  background: #f5f7fa;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.signal-trace {
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.signal-trace summary {
+  color: #667eea;
+  padding: 8px;
+  background: #f5f7fa;
+  border-radius: 4px;
+  margin-top: 8px;
+  outline: none;
+}
+
+.signal-trace summary:hover {
+  background: #e0e0e0;
+}
+
+.signal-trace pre {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  padding: 12px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 11px;
+  line-height: 1.4;
+  margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+  .signal-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .signal-time {
+    margin-left: 0;
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "signals": [
+    {
+      "componentId": "RDBMS_CLUSTER_01",
+      "componentType": "RDBMS",
+      "errorCode": "CONNECTION_POOL_EXHAUSTED",
+      "errorMessage": "All connections in pool exhausted. Database unavailable.",
+      "severity": "P0",
+      "metadata": {
+        "poolSize": 100,
+        "activeConnections": 100,
+        "waitingRequests": 5432
+      },
+      "stackTrace": "Error: Connection timeout\n    at DatabasePool.getConnection (db/pool.ts:45:12)\n    at Query.execute (db/query.ts:78:9)",
+      "latency": 30000
+    },
+    {
+      "componentId": "API_GATEWAY_01",
+      "componentType": "API",
+      "errorCode": "DOWNSTREAM_ERROR",
+      "errorMessage": "Database unavailable - cascading failure detected.",
+      "severity": "P1",
+      "metadata": {
+        "downstreamService": "RDBMS_CLUSTER_01",
+        "errorRate": 0.95,
+        "averageLatency": 25000
+      },
+      "latency": 25000
+    },
+    {
+      "componentId": "CACHE_CLUSTER_01",
+      "componentType": "CACHE_CLUSTER",
+      "errorCode": "HIGH_MEMORY_USAGE",
+      "errorMessage": "Cache cluster memory usage at 92%.",
+      "severity": "P2",
+      "metadata": {
+        "memoryUsagePercent": 92,
+        "evictionRate": 1200,
+        "hitRate": 0.45
+      }
+    },
+    {
+      "componentId": "ASYNC_QUEUE_01",
+      "componentType": "ASYNC_QUEUE",
+      "errorCode": "QUEUE_BACKLOG",
+      "errorMessage": "Queue backlog exceeds threshold: 50,000 jobs pending.",
+      "severity": "P1",
+      "metadata": {
+        "pendingJobs": 50000,
+        "processingRate": 100,
+        "estimatedClearTime": "8 hours"
+      }
+    },
+    {
+      "componentId": "MCP_HOST_02",
+      "componentType": "MCP_HOST",
+      "errorCode": "SERVICE_UNAVAILABLE",
+      "errorMessage": "MCP Host 02 is down - health checks failing.",
+      "severity": "P0",
+      "metadata": {
+        "healthCheckAttempts": 5,
+        "lastSuccessfulCheck": "2024-01-15T10:25:00Z",
+        "failureReason": "Connection refused"
+      },
+      "stackTrace": "Error: connect ECONNREFUSED 192.168.1.52:8080\n    at TCPConnectWrap.afterConnect [as oncomplete] (net.js:1141:15)"
+    },
+    {
+      "componentId": "API_GATEWAY_03",
+      "componentType": "API",
+      "errorCode": "SLOW_RESPONSE",
+      "errorMessage": "Intermittent slow responses from payment service.",
+      "severity": "P3",
+      "metadata": {
+        "averageLatencyMs": 5200,
+        "errorRate": 0.02,
+        "retryCount": 120
+      },
+      "latency": 5200
+    }
+  ]
+}
