@@ -1,0 +1,98 @@
+.api-docs-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.api-docs-header {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.api-docs-back-btn {
+  background: #eef2ff;
+  color: #3f51b5;
+  border: 1px solid #c7d2fe;
+  margin-bottom: 12px;
+}
+
+.api-docs-back-btn:hover {
+  background: #e0e7ff;
+}
+
+.api-docs-header h1 {
+  font-size: 28px;
+  margin-bottom: 8px;
+  color: #1f2937;
+}
+
+.api-docs-header p {
+  color: #6b7280;
+}
+
+.api-docs-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.api-docs-section {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.08);
+}
+
+.api-docs-section h2 {
+  font-size: 20px;
+  margin-bottom: 12px;
+  color: #374151;
+}
+
+.api-docs-section ul {
+  margin-left: 18px;
+  margin-bottom: 12px;
+  color: #4b5563;
+}
+
+.api-docs-section li {
+  margin-bottom: 8px;
+}
+
+.api-docs-section code {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #f3f4f6;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.api-docs-section pre {
+  margin-top: 12px;
+  background: #111827;
+  color: #e5e7eb;
+  border-radius: 8px;
+  padding: 14px;
+  overflow-x: auto;
+  line-height: 1.45;
+  font-size: 13px;
+}
+
+@media (max-width: 768px) {
+  .api-docs-page {
+    padding: 12px;
+  }
+
+  .api-docs-header,
+  .api-docs-section {
+    padding: 16px;
+  }
+
+  .api-docs-header h1 {
+    font-size: 22px;
+  }
+}

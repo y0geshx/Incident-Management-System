@@ -12,10 +12,30 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+.dashboard-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
 .dashboard-header h1 {
   font-size: 32px;
-  margin-bottom: 20px;
+  margin-bottom: 0;
   color: #333;
+}
+
+.api-docs-btn {
+  background: #eef2ff;
+  color: #4f46e5;
+  border: 1px solid #c7d2fe;
+  padding: 8px 14px;
+  font-weight: 600;
+}
+
+.api-docs-btn:hover {
+  background: #e0e7ff;
 }
 
 .header-stats {
@@ -210,6 +230,11 @@
 
   .dashboard-header h1 {
     font-size: 24px;
+  }
+
+  .dashboard-header-top {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .header-stats {

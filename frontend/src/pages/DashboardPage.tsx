@@ -40,13 +40,10 @@ export const DashboardPage: React.FC = () => {
       setError('');
       // Fetch all incidents including closed ones
       const data = await apiClient.getIncidents();
-      // Sort by severity (P0 first) and then by most recent
-      const sorted = data.data.sort((a, b) => {
-        const severityOrder: Record<string, number> = { P0: 0, P1: 1, P2: 2, P3: 3 };
-        const severityDiff = (severityOrder[a.severity] || 99) - (severityOrder[b.severity] || 99);
-        if (severityDiff !== 0) return severityDiff;
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      });
+      // Sort newest incidents first
+      const sorted = data.data.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
       setIncidents(sorted);
       setLastUpdated(new Date().toLocaleTimeString());
     } catch (err) {
@@ -121,7 +118,15 @@ export const DashboardPage: React.FC = () => {
   return (
     <div className="dashboard-page">
       <header className="dashboard-header">
-        <h1>🚨 Incident Management System</h1>
+        <div className="dashboard-header-top">
+          <h1>🚨 Incident Management System</h1>
+          <button
+            className="api-docs-btn"
+            onClick={() => navigate('/api-docs')}
+          >
+            API Docs
+          </button>
+        </div>
         <div className="header-stats">
           <div className="stat">
             <span className="stat-label">Total Active</span>
