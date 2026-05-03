@@ -101,6 +101,34 @@
   transform: scale(1.05);
 }
 
+.refresh-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.auto-refresh-btn {
+  background: #f5f7fa;
+  color: #667eea;
+  border: 2px solid #e0e0e0;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.auto-refresh-btn:hover {
+  border-color: #667eea;
+  background: #e8ecf6;
+}
+
+.auto-refresh-btn.active {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
 .refresh-info {
   display: flex;
   flex-wrap: wrap;

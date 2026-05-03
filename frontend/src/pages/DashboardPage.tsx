@@ -16,12 +16,18 @@ export const DashboardPage: React.FC = () => {
   const [severityFilter, setSeverityFilter] = useState<string>(searchParams.get('severity') || 'all');
   const [tagFilter, setTagFilter] = useState<string>(searchParams.get('component') || 'all');
   const [lastUpdated, setLastUpdated] = useState<string>('---');
+  const [autoRefresh, setAutoRefresh] = useState(true);
 
   useEffect(() => {
     fetchIncidents();
-    const interval = setInterval(() => fetchIncidents(), 5000); // Refresh every 5 seconds
-    return () => clearInterval(interval);
-  }, []);
+    let interval: ReturnType<typeof setInterval> | undefined;
+    if (autoRefresh) {
+      interval = setInterval(() => fetchIncidents(), 5000); // Refresh every 5 seconds
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [autoRefresh]);
 
   const fetchIncidents = async (manual = false) => {
     try {
@@ -93,6 +99,10 @@ export const DashboardPage: React.FC = () => {
       }
     });
     setSearchParams(newParams);
+  };
+
+  const handleAutoRefreshToggle = () => {
+    setAutoRefresh(!autoRefresh);
   };
 
   const filteredIncidents = filterIncidents();
@@ -238,15 +248,24 @@ export const DashboardPage: React.FC = () => {
         </div>
         <div className="refresh-info">
           <span>Dashboard updated at {lastUpdated}</span>
-          <span>Health refreshed every 5 seconds</span>
+          <span>Auto-refresh {autoRefresh ? 'enabled' : 'disabled'}</span>
         </div>
-        <button
-          className="refresh-btn"
-          onClick={() => fetchIncidents(true)}
-          disabled={refreshing}
-        >
-          {refreshing ? 'Refreshing...' : '↻ Refresh'}
-        </button>
+        <div className="refresh-controls">
+          <button
+            className={`auto-refresh-btn ${autoRefresh ? 'active' : ''}`}
+            onClick={handleAutoRefreshToggle}
+            title={autoRefresh ? 'Disable auto-refresh' : 'Enable auto-refresh'}
+          >
+            {autoRefresh ? '⏸ Auto On' : '▶ Auto Off'}
+          </button>
+          <button
+            className="refresh-btn"
+            onClick={() => fetchIncidents(true)}
+            disabled={refreshing}
+          >
+            {refreshing ? 'Refreshing...' : '↻ Refresh'}
+          </button>
+        </div>
       </div>
 
       <div className="incidents-grid">
