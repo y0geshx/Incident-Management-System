@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import '../styles/IncidentDetailPage.css';
 import { RCAForm } from '../components/RCAForm';
 import { SignalsList } from '../components/SignalsList';
@@ -9,6 +9,7 @@ import { WorkItem, Signal, IncidentStatus, RCAInput } from '../types';
 export const IncidentDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [incident, setIncident] = useState<WorkItem | null>(null);
   const [signals, setSignals] = useState<Signal[]>([]);
   const [signalsLoading, setSignalsLoading] = useState(false);
@@ -16,6 +17,20 @@ export const IncidentDetailPage: React.FC = () => {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<'details' | 'signals' | 'rca'>('details');
   const [statusTransitioning, setStatusTransitioning] = useState(false);
+
+  const getBackToDashboardPath = (): string => {
+    const params = new URLSearchParams();
+    const status = searchParams.get('status');
+    const severity = searchParams.get('severity');
+    const component = searchParams.get('component');
+    
+    if (status) params.set('status', status);
+    if (severity) params.set('severity', severity);
+    if (component) params.set('component', component);
+    
+    const queryString = params.toString();
+    return queryString ? `/?${queryString}` : '/';
+  };
 
   useEffect(() => {
     if (id) {
@@ -88,7 +103,7 @@ export const IncidentDetailPage: React.FC = () => {
     return (
       <div className="incident-detail error">
         <h2>Incident not found</h2>
-        <button onClick={() => navigate('/')}>← Back to Dashboard</button>
+        <button onClick={() => navigate(getBackToDashboardPath())}>← Back to Dashboard</button>
       </div>
     );
   }
@@ -104,7 +119,7 @@ export const IncidentDetailPage: React.FC = () => {
   return (
     <div className="incident-detail">
       <header className="incident-detail-header">
-        <button className="back-btn" onClick={() => navigate('/')}>
+        <button className="back-btn" onClick={() => navigate(getBackToDashboardPath())}>
           ← Back to Dashboard
         </button>
         <div className="incident-title">

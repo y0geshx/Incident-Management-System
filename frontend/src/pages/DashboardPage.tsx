@@ -3,16 +3,18 @@ import '../styles/DashboardPage.css';
 import { IncidentCard } from '../components/IncidentCard';
 import { apiClient, getApiErrorMessage } from '../services/apiClient';
 import { WorkItem } from '../types';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [incidents, setIncidents] = useState<WorkItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
-  const [filter, setFilter] = useState<string>('all');
-  const [severityFilter, setSeverityFilter] = useState<string>('all');
+  const [filter, setFilter] = useState<string>(searchParams.get('status') || 'all');
+  const [severityFilter, setSeverityFilter] = useState<string>(searchParams.get('severity') || 'all');
+  const [tagFilter, setTagFilter] = useState<string>(searchParams.get('component') || 'all');
   const [lastUpdated, setLastUpdated] = useState<string>('---');
 
   useEffect(() => {
@@ -56,11 +58,41 @@ export const DashboardPage: React.FC = () => {
     if (severityFilter !== 'all') {
       filtered = filtered.filter((i) => i.severity === severityFilter);
     }
+    if (tagFilter !== 'all') {
+      filtered = filtered.filter((i) => i.componentType === tagFilter);
+    }
     return filtered;
   };
 
   const handleIncidentClick = (id: string) => {
     navigate(`/incident/${id}`);
+  };
+
+  const handleFilterChange = (value: string) => {
+    setFilter(value);
+    updateSearchParams({ status: value !== 'all' ? value : null });
+  };
+
+  const handleSeverityChange = (value: string) => {
+    setSeverityFilter(value);
+    updateSearchParams({ severity: value !== 'all' ? value : null });
+  };
+
+  const handleTagChange = (value: string) => {
+    setTagFilter(value);
+    updateSearchParams({ component: value !== 'all' ? value : null });
+  };
+
+  const updateSearchParams = (params: { status?: string | null; severity?: string | null; component?: string | null }) => {
+    const newParams = new URLSearchParams(searchParams);
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) {
+        newParams.set(key, value);
+      } else {
+        newParams.delete(key);
+      }
+    });
+    setSearchParams(newParams);
   };
 
   const filteredIncidents = filterIncidents();
@@ -99,31 +131,31 @@ export const DashboardPage: React.FC = () => {
         <div className="filter-buttons">
           <button
             className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
-            onClick={() => setFilter('all')}
+            onClick={() => handleFilterChange('all')}
           >
             All ({incidents.length})
           </button>
           <button
             className={`filter-btn ${filter === 'OPEN' ? 'active' : ''}`}
-            onClick={() => setFilter('OPEN')}
+            onClick={() => handleFilterChange('OPEN')}
           >
             Open ({incidents.filter((i) => i.status === 'OPEN').length})
           </button>
           <button
             className={`filter-btn ${filter === 'INVESTIGATING' ? 'active' : ''}`}
-            onClick={() => setFilter('INVESTIGATING')}
+            onClick={() => handleFilterChange('INVESTIGATING')}
           >
             Investigating ({incidents.filter((i) => i.status === 'INVESTIGATING').length})
           </button>
           <button
             className={`filter-btn ${filter === 'RESOLVED' ? 'active' : ''}`}
-            onClick={() => setFilter('RESOLVED')}
+            onClick={() => handleFilterChange('RESOLVED')}
           >
             Resolved ({incidents.filter((i) => i.status === 'RESOLVED').length})
           </button>
           <button
             className={`filter-btn ${filter === 'CLOSED' ? 'active' : ''}`}
-            onClick={() => setFilter('CLOSED')}
+            onClick={() => handleFilterChange('CLOSED')}
           >
             Closed ({incidents.filter((i) => i.status === 'CLOSED').length})
           </button>
@@ -131,33 +163,77 @@ export const DashboardPage: React.FC = () => {
         <div className="filter-buttons severity-filters">
           <button
             className={`filter-btn ${severityFilter === 'all' ? 'active' : ''}`}
-            onClick={() => setSeverityFilter('all')}
+            onClick={() => handleSeverityChange('all')}
           >
             All Severities
           </button>
           <button
             className={`filter-btn ${severityFilter === 'P0' ? 'active' : ''}`}
-            onClick={() => setSeverityFilter('P0')}
+            onClick={() => handleSeverityChange('P0')}
           >
             P0
           </button>
           <button
             className={`filter-btn ${severityFilter === 'P1' ? 'active' : ''}`}
-            onClick={() => setSeverityFilter('P1')}
+            onClick={() => handleSeverityChange('P1')}
           >
             P1
           </button>
           <button
             className={`filter-btn ${severityFilter === 'P2' ? 'active' : ''}`}
-            onClick={() => setSeverityFilter('P2')}
+            onClick={() => handleSeverityChange('P2')}
           >
             P2
           </button>
           <button
             className={`filter-btn ${severityFilter === 'P3' ? 'active' : ''}`}
-            onClick={() => setSeverityFilter('P3')}
+            onClick={() => handleSeverityChange('P3')}
           >
             P3
+          </button>
+        </div>
+        <div className="filter-buttons component-filters">
+          <button
+            className={`filter-btn ${tagFilter === 'all' ? 'active' : ''}`}
+            onClick={() => handleTagChange('all')}
+          >
+            All Components
+          </button>
+          <button
+            className={`filter-btn ${tagFilter === 'API' ? 'active' : ''}`}
+            onClick={() => handleTagChange('API')}
+          >
+            API
+          </button>
+          <button
+            className={`filter-btn ${tagFilter === 'RDBMS' ? 'active' : ''}`}
+            onClick={() => handleTagChange('RDBMS')}
+          >
+            RDBMS
+          </button>
+          <button
+            className={`filter-btn ${tagFilter === 'CACHE_CLUSTER' ? 'active' : ''}`}
+            onClick={() => handleTagChange('CACHE_CLUSTER')}
+          >
+            Cache
+          </button>
+          <button
+            className={`filter-btn ${tagFilter === 'ASYNC_QUEUE' ? 'active' : ''}`}
+            onClick={() => handleTagChange('ASYNC_QUEUE')}
+          >
+            Queue
+          </button>
+          <button
+            className={`filter-btn ${tagFilter === 'NOSQL_STORE' ? 'active' : ''}`}
+            onClick={() => handleTagChange('NOSQL_STORE')}
+          >
+            NoSQL
+          </button>
+          <button
+            className={`filter-btn ${tagFilter === 'MCP_HOST' ? 'active' : ''}`}
+            onClick={() => handleTagChange('MCP_HOST')}
+          >
+            MCP Host
           </button>
         </div>
         <div className="refresh-info">
