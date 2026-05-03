@@ -17,6 +17,7 @@ export const DashboardPage: React.FC = () => {
   const [tagFilter, setTagFilter] = useState<string>(searchParams.get('component') || 'all');
   const [lastUpdated, setLastUpdated] = useState<string>('---');
   const [autoRefresh, setAutoRefresh] = useState(false);
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   useEffect(() => {
     fetchIncidents();
@@ -67,6 +68,12 @@ export const DashboardPage: React.FC = () => {
     if (tagFilter !== 'all') {
       filtered = filtered.filter((i) => i.componentType === tagFilter);
     }
+    if (searchQuery) {
+      filtered = filtered.filter((i) => 
+        i.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        i.id.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
     return filtered;
   };
 
@@ -105,6 +112,10 @@ export const DashboardPage: React.FC = () => {
     setAutoRefresh(!autoRefresh);
   };
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
   const filteredIncidents = filterIncidents();
 
   return (
@@ -138,6 +149,15 @@ export const DashboardPage: React.FC = () => {
       {error && <div className="error-banner">{error}</div>}
 
       <div className="dashboard-controls">
+        <div className="search-bar-container">
+          <input
+            type="text"
+            placeholder="Search by incident title or ID..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            className="search-input"
+          />
+        </div>
         <div className="filter-buttons">
           <button
             className={`filter-btn ${filter === 'all' ? 'active' : ''}`}

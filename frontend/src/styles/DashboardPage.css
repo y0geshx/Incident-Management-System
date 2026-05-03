@@ -53,6 +53,32 @@
   border-left: 4px solid #c62828;
 }
 
+.search-bar-container {
+  flex: 1;
+  min-width: 200px;
+  max-width: 400px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.search-input::placeholder {
+  color: #999;
+}
+
 .dashboard-controls {
   display: flex;
   justify-content: space-between;
