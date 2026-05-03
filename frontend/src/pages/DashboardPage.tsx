@@ -120,12 +120,14 @@ export const DashboardPage: React.FC = () => {
       <header className="dashboard-header">
         <div className="dashboard-header-top">
           <h1>🚨 Incident Management System</h1>
-          <button
-            className="api-docs-btn"
-            onClick={() => navigate('/api-docs')}
-          >
-            API Docs
-          </button>
+          <div className="dashboard-header-actions">
+            <button className="api-docs-btn" onClick={() => navigate('/metrics')}>
+              Metrics Page
+            </button>
+            <button className="api-docs-btn" onClick={() => navigate('/api-docs')}>
+              API Docs
+            </button>
+          </div>
         </div>
         <div className="header-stats">
           <div className="stat">
