@@ -168,6 +168,10 @@ export const IncidentDetailPage: React.FC = () => {
               <h3>Incident Information</h3>
               <div className="detail-grid">
                 <div className="detail-item">
+                  <span className="label">Incident ID:</span>
+                  <span className="value">{incident.id}</span>
+                </div>
+                <div className="detail-item">
                   <span className="label">Description:</span>
                   <span className="value">{incident.description}</span>
                 </div>

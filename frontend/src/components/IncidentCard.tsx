@@ -27,6 +27,7 @@ export const IncidentCard: React.FC<IncidentCardProps> = ({ incident, onClick })
       </div>
       
       <div className="incident-body">
+        <p><strong>Incident ID:</strong> {incident.id}</p>
         <p><strong>Component:</strong> {incident.componentId}</p>
         <p><strong>Signals:</strong> {incident.signalCount}</p>
         <p><strong>Type:</strong> {incident.componentType}</p>
