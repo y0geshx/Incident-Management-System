@@ -201,15 +201,31 @@ describe("POST /api/incidents/:id/rca state gating", () => {
       WorkItemState.CLOSED
     );
   });
+});
 
-  test("returns 400 when duplicate RCA submission is attempted", async () => {
+describe("POST /api/incidents", () => {
+  test("creates a new incident and returns 201", async () => {
     const signalService = {
       getSignalsForWorkItem: jest.fn(),
+      processSignal: jest.fn().mockResolvedValue(undefined),
     };
+
     const incidentService = {
-      getWorkItem: jest.fn().mockResolvedValue(makeWorkItem("inc-dup", WorkItemState.RESOLVED)),
-      submitRCA: jest.fn().mockRejectedValue(new Error("RCA has already been submitted for this incident")),
-      transitionWorkItemState: jest.fn(),
+      createIncident: jest.fn().mockResolvedValue({
+        id: "inc-new",
+        componentId: "WEB_FRONTEND_01",
+        componentType: ComponentType.API,
+        status: WorkItemState.OPEN,
+        severity: Severity.P2,
+        title: "New incident created",
+        description: "A manually created incident",
+        signalIds: ["sig-1"],
+        signalCount: 1,
+        firstSignalTime: new Date("2026-05-04T12:00:00Z"),
+        lastSignalTime: new Date("2026-05-04T12:00:00Z"),
+        createdAt: new Date("2026-05-04T12:00:00Z"),
+        updatedAt: new Date("2026-05-04T12:00:00Z"),
+      }),
     };
 
     const app = express();
@@ -223,19 +239,88 @@ describe("POST /api/incidents/:id/rca state gating", () => {
     );
 
     const response = await request(app)
-      .post("/api/incidents/inc-dup/rca")
+      .post("/api/incidents")
       .send({
-        incidentStartTime: "2026-01-01T10:00:00Z",
-        incidentEndTime: "2026-01-01T10:30:00Z",
-        rootCauseCategory: "Service Crash",
-        fixApplied: "Restarted service",
-        preventionSteps: "Add monitoring",
-        createdBy: "test-user",
+        title: "New incident created",
+        description: "A manually created incident",
+        componentType: ComponentType.API,
+        componentId: "WEB_FRONTEND_01",
+        severity: Severity.P2,
+        errorCode: "CONNECTION_POOL_EXHAUSTED",
+        errorMessage: "All connections in pool exhausted. Database unavailable.",
+        metadata: {
+          poolSize: 100,
+          activeConnections: 100,
+          waitingRequests: 5432,
+        },
+        stackTrace: "Error: Connection timeout\n    at DatabasePool.getConnection (db/pool.ts:45:12)",
+        latency: 30000,
+        assignedTo: "ops-team",
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body.id).toBe("inc-new");
+    expect(incidentService.createIncident).toHaveBeenCalledWith({
+      title: "New incident created",
+      description: "A manually created incident",
+      componentType: ComponentType.API,
+      componentId: "WEB_FRONTEND_01",
+      severity: Severity.P2,
+      assignedTo: "ops-team",
+      initialSignalId: expect.any(String),
+      initialSignalTime: expect.any(Date),
+    });
+    expect(signalService.processSignal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        componentId: "WEB_FRONTEND_01",
+        componentType: ComponentType.API,
+        errorCode: "CONNECTION_POOL_EXHAUSTED",
+        errorMessage: "All connections in pool exhausted. Database unavailable.",
+        severity: Severity.P2,
+        metadata: {
+          poolSize: 100,
+          activeConnections: 100,
+          waitingRequests: 5432,
+        },
+        stackTrace: "Error: Connection timeout\n    at DatabasePool.getConnection (db/pool.ts:45:12)",
+        latency: 30000,
+      })
+    );
+  });
+
+  test("returns 400 when required fields are missing", async () => {
+    const signalService = {
+      getSignalsForWorkItem: jest.fn(),
+    };
+    const incidentService = {
+      createIncident: jest.fn(),
+    };
+
+    const app = express();
+    app.use(express.json());
+    app.use(
+      "/api",
+      createSignalRoutes(
+        signalService as any,
+        incidentService as any
+      )
+    );
+
+    const response = await request(app)
+      .post("/api/incidents")
+      .send({
+        title: "",
+        description: "",
+        componentType: ComponentType.API,
+        componentId: "",
+        severity: "P1",
+        errorCode: "",
+        errorMessage: "",
       });
 
     expect(response.status).toBe(400);
-    expect(response.body.error).toContain("already been submitted");
-    expect(incidentService.transitionWorkItemState).not.toHaveBeenCalled();
+    expect(response.body.error).toContain("Missing required fields");
+    expect(incidentService.createIncident).not.toHaveBeenCalled();
   });
 });
 
