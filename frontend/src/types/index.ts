@@ -51,5 +51,19 @@ export interface RCAInput {
   createdBy: string;
 }
 
+export interface CreateIncidentInput {
+  title: string;
+  description: string;
+  componentType: string;
+  componentId: string;
+  severity: SeverityLevel;
+  errorCode: string;
+  errorMessage: string;
+  metadata: Record<string, unknown>;
+  stackTrace?: string;
+  latency?: number;
+  assignedTo?: string;
+}
+
 export type SeverityLevel = "P0" | "P1" | "P2" | "P3";
 export type IncidentStatus = "OPEN" | "INVESTIGATING" | "RESOLVED" | "CLOSED";
