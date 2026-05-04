@@ -93,7 +93,7 @@ export const NewIncidentPage: React.FC = () => {
         errorCode: form.errorCode.trim(),
         errorMessage: form.errorMessage.trim(),
         metadata,
-        stackTrace: form.stackTrace.trim() || undefined,
+        stackTrace: form.stackTrace?.trim() || undefined,
         latency,
         assignedTo: form.assignedTo?.trim() || undefined,
       });
@@ -109,157 +109,255 @@ export const NewIncidentPage: React.FC = () => {
   return (
     <div className="new-incident-page">
       <header className="new-incident-header">
-        <button className="back-btn" onClick={() => navigate('/')}>← Back to Dashboard</button>
-        <h1>Create New Incident</h1>
+        <button className="back-btn" onClick={() => navigate('/')}>
+          <span>←</span> Back
+        </button>
+        <div className="header-content">
+          <h1>Create New Incident</h1>
+          <p className="header-subtitle">Report and track a new incident in your system</p>
+        </div>
       </header>
 
       <form className="new-incident-form" onSubmit={handleSubmit}>
-        {error && <div className="form-error">{error}</div>}
+        {error && (
+          <div className="form-error">
+            <span className="error-icon">⚠️</span>
+            <span>{error}</span>
+          </div>
+        )}
 
-        <div className="form-row">
-          <label htmlFor="title">Incident Title</label>
-          <input
-            id="title"
-            name="title"
-            value={form.title}
-            onChange={handleChange}
-            placeholder="Enter an incident title"
-            required
-          />
-        </div>
+        {/* Basic Information Section */}
+        <div className="form-section">
+          <div className="section-header">
+            <h2>Basic Information</h2>
+            <p className="section-description">Core incident details</p>
+          </div>
 
-        <div className="form-row">
-          <label htmlFor="description">Description</label>
-          <textarea
-            id="description"
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-            placeholder="Describe the incident"
-            rows={5}
-            required
-          />
-        </div>
-
-        <div className="form-grid">
-          <div className="form-row">
-            <label htmlFor="errorCode">Error Code</label>
+          <div className="form-row full-width">
+            <label htmlFor="title">
+              Incident Title <span className="required-indicator">*</span>
+            </label>
+            <p className="field-hint">Give your incident a clear, descriptive title</p>
             <input
-              id="errorCode"
-              name="errorCode"
-              value={form.errorCode}
+              id="title"
+              name="title"
+              value={form.title}
               onChange={handleChange}
-              placeholder="CONNECTION_POOL_EXHAUSTED"
+              placeholder="e.g., Database Connection Pool Exhaustion"
               required
             />
           </div>
 
-          <div className="form-row">
-            <label htmlFor="errorMessage">Error Message</label>
-            <input
-              id="errorMessage"
-              name="errorMessage"
-              value={form.errorMessage}
-              onChange={handleChange}
-              placeholder="All connections in pool exhausted. Database unavailable."
-              required
-            />
-          </div>
-
-          <div className="form-row">
-            <label htmlFor="componentType">Component Type</label>
-            <select
-              id="componentType"
-              name="componentType"
-              value={form.componentType}
-              onChange={handleChange}
-            >
-              {componentOptions.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-row">
-            <label htmlFor="componentId">Component ID</label>
-            <input
-              id="componentId"
-              name="componentId"
-              value={form.componentId}
-              onChange={handleChange}
-              placeholder="e.g. API_GATEWAY_01"
-              required
-            />
-          </div>
-
-          <div className="form-row">
-            <label htmlFor="severity">Severity</label>
-            <select
-              id="severity"
-              name="severity"
-              value={form.severity}
-              onChange={handleChange}
-            >
-              {severityOptions.map((level) => (
-                <option key={level} value={level}>
-                  {level}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-row">
-            <label htmlFor="latencyInput">Latency (ms)</label>
-            <input
-              id="latencyInput"
-              name="latencyInput"
-              value={form.latencyInput}
-              onChange={handleChange}
-              placeholder="30000"
-            />
-          </div>
-
-          <div className="form-row">
-            <label htmlFor="stackTrace">Stack Trace</label>
+          <div className="form-row full-width">
+            <label htmlFor="description">
+              Description <span className="required-indicator">*</span>
+            </label>
+            <p className="field-hint">Provide detailed information about what happened</p>
             <textarea
-              id="stackTrace"
-              name="stackTrace"
-              value={form.stackTrace}
+              id="description"
+              name="description"
+              value={form.description}
               onChange={handleChange}
-              placeholder="Error: Connection timeout\n    at DatabasePool.getConnection (db/pool.ts:45:12)"
+              placeholder="Describe the incident: what was affected, when it occurred, and what you observed..."
               rows={4}
+              required
             />
           </div>
+        </div>
 
-          <div className="form-row">
-            <label htmlFor="metadataJson">Metadata</label>
-            <textarea
-              id="metadataJson"
-              name="metadataJson"
-              value={form.metadataJson}
-              onChange={handleChange}
-              placeholder='{"poolSize":100,"activeConnections":100,"waitingRequests":5432}'
-              rows={5}
-            />
+        {/* Error Information Section */}
+        <div className="form-section">
+          <div className="section-header">
+            <h2>Error Information</h2>
+            <p className="section-description">Specific error details</p>
           </div>
 
-          <div className="form-row">
-            <label htmlFor="assignedTo">Assigned To</label>
-            <input
-              id="assignedTo"
-              name="assignedTo"
-              value={form.assignedTo}
-              onChange={handleChange}
-              placeholder="Optional assignee"
-            />
+          <div className="form-grid">
+            <div className="form-row">
+              <label htmlFor="errorCode">
+                Error Code <span className="required-indicator">*</span>
+              </label>
+              <p className="field-hint">Unique error identifier</p>
+              <input
+                id="errorCode"
+                name="errorCode"
+                value={form.errorCode}
+                onChange={handleChange}
+                placeholder="CONNECTION_POOL_EXHAUSTED"
+                required
+              />
+            </div>
+
+            <div className="form-row">
+              <label htmlFor="errorMessage">
+                Error Message <span className="required-indicator">*</span>
+              </label>
+              <p className="field-hint">Full error message text</p>
+              <input
+                id="errorMessage"
+                name="errorMessage"
+                value={form.errorMessage}
+                onChange={handleChange}
+                placeholder="All connections in pool exhausted..."
+                required
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Component Information Section */}
+        <div className="form-section">
+          <div className="section-header">
+            <h2>Component Information</h2>
+            <p className="section-description">Affected system component</p>
+          </div>
+
+          <div className="form-grid">
+            <div className="form-row">
+              <label htmlFor="componentType">Component Type</label>
+              <p className="field-hint">Select the affected component</p>
+              <select
+                id="componentType"
+                name="componentType"
+                value={form.componentType}
+                onChange={handleChange}
+              >
+                {componentOptions.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-row">
+              <label htmlFor="componentId">
+                Component ID <span className="required-indicator">*</span>
+              </label>
+              <p className="field-hint">Unique identifier for the component instance</p>
+              <input
+                id="componentId"
+                name="componentId"
+                value={form.componentId}
+                onChange={handleChange}
+                placeholder="e.g., API_GATEWAY_01"
+                required
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Severity and Performance Section */}
+        <div className="form-section">
+          <div className="section-header">
+            <h2>Impact Assessment</h2>
+            <p className="section-description">Severity level and performance metrics</p>
+          </div>
+
+          <div className="form-grid">
+            <div className="form-row">
+              <label htmlFor="severity">Severity Level</label>
+              <p className="field-hint">Priority level of this incident</p>
+              <div className="severity-selector">
+                <select
+                  id="severity"
+                  name="severity"
+                  value={form.severity}
+                  onChange={handleChange}
+                >
+                  {severityOptions.map((level) => (
+                    <option key={level} value={level}>
+                      {level}
+                    </option>
+                  ))}
+                </select>
+                <span className={`severity-badge severity-${form.severity.toLowerCase()}`}>
+                  {form.severity}
+                </span>
+              </div>
+            </div>
+
+            <div className="form-row">
+              <label htmlFor="latencyInput">Latency <span className="optional-indicator">(optional)</span></label>
+              <p className="field-hint">Response time in milliseconds</p>
+              <input
+                id="latencyInput"
+                name="latencyInput"
+                value={form.latencyInput}
+                onChange={handleChange}
+                placeholder="30000"
+                type="number"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Additional Details Section */}
+        <div className="form-section">
+          <div className="section-header">
+            <h2>Additional Details</h2>
+            <p className="section-description">Optional technical and diagnostic information</p>
+          </div>
+
+          <div className="form-grid full-width-grid">
+            <div className="form-row full-width">
+              <label htmlFor="stackTrace">
+                Stack Trace <span className="optional-indicator">(optional)</span>
+              </label>
+              <p className="field-hint">Error stack trace for debugging</p>
+              <textarea
+                id="stackTrace"
+                name="stackTrace"
+                value={form.stackTrace}
+                onChange={handleChange}
+                placeholder="Error: Connection timeout&#10;    at DatabasePool.getConnection (db/pool.ts:45:12)"
+                rows={3}
+              />
+            </div>
+
+            <div className="form-row full-width">
+              <label htmlFor="metadataJson">
+                Metadata <span className="optional-indicator">(optional, JSON)</span>
+              </label>
+              <p className="field-hint">Additional context as JSON (e.g., pool stats, resource usage)</p>
+              <textarea
+                id="metadataJson"
+                name="metadataJson"
+                value={form.metadataJson}
+                onChange={handleChange}
+                placeholder='{"poolSize":100,"activeConnections":100,"waitingRequests":5432}'
+                rows={4}
+              />
+            </div>
+
+            <div className="form-row full-width">
+              <label htmlFor="assignedTo">
+                Assigned To <span className="optional-indicator">(optional)</span>
+              </label>
+              <p className="field-hint">Team member handling this incident</p>
+              <input
+                id="assignedTo"
+                name="assignedTo"
+                value={form.assignedTo}
+                onChange={handleChange}
+                placeholder="engineer@company.com"
+              />
+            </div>
           </div>
         </div>
 
         <div className="submit-row">
           <button className="submit-btn" type="submit" disabled={submitting}>
-            {submitting ? 'Creating Incident...' : 'Create Incident'}
+            {submitting ? (
+              <>
+                <span className="spinner"></span>
+                Creating Incident...
+              </>
+            ) : (
+              <>
+                <span>✓</span> Create Incident
+              </>
+            )}
           </button>
         </div>
       </form>
