@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './styles/App.css';
 import { DashboardPage } from './pages/DashboardPage';
 import { IncidentDetailPage } from './pages/IncidentDetailPage';
+import { NewIncidentPage } from './pages/NewIncidentPage';
 import { ApiDocsPage } from './pages/ApiDocsPage';
 import { MetricsPage } from './pages/MetricsPage';
 
@@ -11,6 +12,7 @@ function App() {
       <div className="app">
         <Routes>
           <Route path="/" element={<DashboardPage />} />
+          <Route path="/incident/new" element={<NewIncidentPage />} />
           <Route path="/incident/:id" element={<IncidentDetailPage />} />
           <Route path="/api-docs" element={<ApiDocsPage />} />
           <Route path="/metrics" element={<MetricsPage />} />
