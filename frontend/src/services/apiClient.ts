@@ -41,6 +41,23 @@ class IMSApiClient {
     return response.data;
   }
 
+  async createIncident(data: {
+    title: string;
+    description: string;
+    componentType: string;
+    componentId: string;
+    severity: string;
+    errorCode: string;
+    errorMessage: string;
+    metadata: Record<string, unknown>;
+    stackTrace?: string;
+    latency?: number;
+    assignedTo?: string;
+  }): Promise<WorkItem> {
+    const response = await this.client.post<WorkItem>('/incidents', data);
+    return response.data;
+  }
+
   async getIncidentSignals(id: string): Promise<{ data: Signal[]; total: number }> {
     const response = await this.client.get<{ data: Signal[]; total: number }>(`/incidents/${id}/signals`);
     return response.data;
