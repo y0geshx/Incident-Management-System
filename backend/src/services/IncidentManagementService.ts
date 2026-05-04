@@ -8,6 +8,8 @@ import {
   WorkItem,
   RootCauseAnalysis,
   WorkItemState,
+  ComponentType,
+  Severity,
   AlertMessage,
   AlertStatus,
 } from "../types";
@@ -170,6 +172,39 @@ export class IncidentManagementService {
       await this.cacheStore.setWorkItem(workItem, 300);
     }
 
+    return workItem;
+  }
+
+  async createIncident(input: {
+    componentId: string;
+    componentType: ComponentType;
+    severity: Severity;
+    title: string;
+    description: string;
+    assignedTo?: string;
+    initialSignalId?: string;
+    initialSignalTime?: Date;
+  }): Promise<WorkItem> {
+    const now = new Date();
+    const workItem: WorkItem = {
+      id: uuidv4(),
+      componentId: input.componentId,
+      componentType: input.componentType,
+      status: WorkItemState.OPEN,
+      severity: input.severity,
+      title: input.title,
+      description: input.description,
+      signalIds: input.initialSignalId ? [input.initialSignalId] : [],
+      signalCount: input.initialSignalId ? 1 : 0,
+      firstSignalTime: input.initialSignalTime || now,
+      lastSignalTime: input.initialSignalTime || now,
+      assignedTo: input.assignedTo,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    await this.sourceOfTruthStore.createWorkItem(workItem);
+    await this.cacheStore.setWorkItem(workItem, 300);
     return workItem;
   }
 
