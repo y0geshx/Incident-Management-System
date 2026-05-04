@@ -28,6 +28,20 @@ interface RCARequestBody {
   createdBy?: string;
 }
 
+interface IncidentCreateRequest {
+  title: string;
+  description: string;
+  componentType: ComponentType;
+  componentId: string;
+  severity: Severity;
+  errorCode: string;
+  errorMessage: string;
+  metadata?: Record<string, unknown>;
+  stackTrace?: string;
+  latency?: number;
+  assignedTo?: string;
+}
+
 export function createSignalRoutes(
   signalService: SignalProcessingService,
   incidentService: IncidentManagementService
@@ -127,9 +141,77 @@ export function createSignalRoutes(
   });
 
   /**
-   * GET /api/incidents
-   * Get all incidents (or filter by status)
+   * POST /api/incidents
+   * Create a new incident manually
    */
+  router.post("/incidents", async (req: Request, res: Response) => {
+    try {
+      const {
+        title,
+        description,
+        componentType,
+        componentId,
+        severity,
+        errorCode,
+        errorMessage,
+        metadata,
+        stackTrace,
+        latency,
+        assignedTo,
+      } = req.body as IncidentCreateRequest;
+
+      if (
+        !title ||
+        !description ||
+        !componentType ||
+        !componentId ||
+        !severity ||
+        !errorCode ||
+        !errorMessage
+      ) {
+        res.status(400).json({
+          error:
+            "Missing required fields: title, description, componentType, componentId, severity, errorCode, errorMessage",
+        });
+        return;
+      }
+
+      const signalId = uuidv4();
+      const now = new Date();
+      const initialSignal: Signal = {
+        id: signalId,
+        componentId,
+        componentType,
+        errorCode,
+        errorMessage,
+        severity,
+        timestamp: now,
+        metadata: metadata || {},
+        stackTrace,
+        latency,
+      };
+
+      const newIncident = await incidentService.createIncident({
+        title,
+        description,
+        componentType,
+        componentId,
+        severity,
+        assignedTo,
+        initialSignalId: signalId,
+        initialSignalTime: now,
+      });
+
+      await signalService.processSignal(initialSignal);
+
+      res.status(201).json(newIncident);
+    } catch (error) {
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  });
+
   router.get("/incidents", async (req: Request, res: Response) => {
     try {
       const { status } = req.query;
