@@ -20,6 +20,28 @@
   margin-bottom: 20px;
 }
 
+.dashboard-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.live-feed-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  color: #1d4ed8;
+  background: #dbeafe;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
 .dashboard-header-actions {
   display: flex;
   gap: 10px;
