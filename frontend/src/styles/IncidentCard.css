@@ -109,6 +109,20 @@
   color: #667eea;
 }
 
+.assigned-to-value {
+  color: #10b981;
+  font-weight: 600;
+  background: #ecfdf5;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.unassigned {
+  color: #9ca3af;
+  font-weight: 500;
+  font-style: italic;
+}
+
 .incident-footer {
   padding: 15px 20px;
   border-top: 1px solid #e0e0e0;

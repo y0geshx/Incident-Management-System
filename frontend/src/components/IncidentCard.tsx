@@ -31,6 +31,7 @@ export const IncidentCard: React.FC<IncidentCardProps> = ({ incident, onClick })
         <p><strong>Component:</strong> {incident.componentId}</p>
         <p><strong>Signals:</strong> {incident.signalCount}</p>
         <p><strong>Type:</strong> {incident.componentType}</p>
+        <p><strong>Assigned To:</strong> {incident.assignedTo ? <span className="assigned-to-value">{incident.assignedTo}</span> : <span className="unassigned">Unassigned</span>}</p>
         <p><strong>First Signal:</strong> {formatTime(incident.firstSignalTime)}</p>
         <p><strong>Last Signal:</strong> {formatTime(incident.lastSignalTime)}</p>
       </div>
