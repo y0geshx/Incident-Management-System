@@ -15,7 +15,7 @@ export const IncidentDetailPage: React.FC = () => {
   const [signalsLoading, setSignalsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState<'details' | 'signals' | 'rca'>('details');
+  const [activeTab, setActiveTab] = useState<'overview' | 'signals' | 'timeline' | 'rca'>('overview');
   const [statusTransitioning, setStatusTransitioning] = useState(false);
 
   const getBackToDashboardPath = (): string => {
@@ -89,157 +89,325 @@ export const IncidentDetailPage: React.FC = () => {
       await apiClient.submitRCA(id, rcaData);
       // Refresh incident details
       await fetchIncidentDetail();
-      setActiveTab('details');
+      setActiveTab('overview');
     } catch (err) {
       throw new Error(getApiErrorMessage(err));
     }
   };
 
+  const getStatusColor = (status: string) => {
+    const colors = {
+      OPEN: '#d32f2f',
+      INVESTIGATING: '#f57c00',
+      RESOLVED: '#2e7d32',
+      CLOSED: '#1565c0'
+    };
+    return colors[status as keyof typeof colors] || '#757575';
+  };
+
+  const getSeverityColor = (severity: string) => {
+    const colors = {
+      P0: '#d32f2f',
+      P1: '#f57c00',
+      P2: '#fbc02d',
+      P3: '#1976d2',
+    };
+    return colors[severity as keyof typeof colors] || '#757575';
+  };
+
+  const getStatusIcon = (status: string) => {
+    const icons = {
+      OPEN: '🚨',
+      INVESTIGATING: '🔍',
+      RESOLVED: '✅',
+      CLOSED: '🔒'
+    };
+    return icons[status as keyof typeof icons] || '❓';
+  };
+
+  const getSeverityIcon = (severity: string) => {
+    const icons = {
+      P0: '🔴',
+      P1: '🟠',
+      P2: '🟡',
+      P3: '🔵',
+    };
+    return icons[severity as keyof typeof icons] || '⚪';
+  };
+
+  const formatDuration = (startTime: string, endTime?: string) => {
+    const start = new Date(startTime);
+    const end = endTime ? new Date(endTime) : new Date();
+    const diffMs = end.getTime() - start.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffDays > 0) return `${diffDays}d ${diffHours % 24}h`;
+    if (diffHours > 0) return `${diffHours}h ${diffMins % 60}m`;
+    return `${diffMins}m`;
+  };
+
   if (loading) {
-    return <div className="incident-detail loading">Loading incident details...</div>;
+    return (
+      <div className="incident-detail">
+        <div className="loading-skeleton">
+          <div className="skeleton-header"></div>
+          <div className="skeleton-content"></div>
+          <div className="skeleton-tabs"></div>
+          <div className="skeleton-body"></div>
+        </div>
+      </div>
+    );
   }
 
   if (!incident) {
     return (
       <div className="incident-detail error">
+        <div className="error-icon">⚠️</div>
         <h2>Incident not found</h2>
-        <button onClick={() => navigate(getBackToDashboardPath())}>← Back to Dashboard</button>
+        <p>The incident you're looking for doesn't exist or has been removed.</p>
+        <button className="back-btn primary" onClick={() => navigate(getBackToDashboardPath())}>
+          ← Back to Dashboard
+        </button>
       </div>
     );
   }
 
   const canSubmitRCA = incident.status === 'RESOLVED' && !incident.rca;
-  const severityColor = {
-    P0: '#d32f2f',
-    P1: '#f57c00',
-    P2: '#fbc02d',
-    P3: '#1976d2',
-  }[incident.severity] || '#757575';
+  const incidentDuration = formatDuration(incident.firstSignalTime, incident.lastSignalTime);
 
   return (
     <div className="incident-detail">
+      {/* Enhanced Header */}
       <header className="incident-detail-header">
-        <button className="back-btn" onClick={() => navigate(getBackToDashboardPath())}>
-          ← Back to Dashboard
-        </button>
-        <div className="incident-title">
-          <h1>{incident.title}</h1>
-          <div className="incident-meta">
-            <span style={{ color: severityColor }} className="severity">
-              {incident.severity}
-            </span>
-            <span className={`status status-${incident.status.toLowerCase()}`}>
-              {incident.status}
-            </span>
-            <span className="component">{incident.componentType}: {incident.componentId}</span>
+        <div className="header-left">
+          <button className="back-btn" onClick={() => navigate(getBackToDashboardPath())}>
+            ← Back to Dashboard
+          </button>
+        </div>
+
+        <div className="header-center">
+          <div className="incident-title-section">
+            <div className="incident-title-row">
+              <h1>{incident.title}</h1>
+              <div className="incident-badges">
+                <span className="badge severity" style={{ backgroundColor: getSeverityColor(incident.severity) }}>
+                  {getSeverityIcon(incident.severity)} {incident.severity}
+                </span>
+                <span className="badge status" style={{ backgroundColor: getStatusColor(incident.status) }}>
+                  {getStatusIcon(incident.status)} {incident.status}
+                </span>
+              </div>
+            </div>
+            <div className="incident-subtitle">
+              <span className="component-info">
+                {incident.componentType}: {incident.componentId}
+              </span>
+              <span className="duration-info">
+                Duration: {incidentDuration}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="header-right">
+          <div className="quick-stats">
+            <div className="stat">
+              <span className="stat-value">{incident.signalCount}</span>
+              <span className="stat-label">Signals</span>
+            </div>
+            <div className="stat">
+              <span className="stat-value">{new Date(incident.createdAt).toLocaleDateString()}</span>
+              <span className="stat-label">Created</span>
+            </div>
           </div>
         </div>
       </header>
 
+      {/* Enhanced Tabs */}
       <div className="incident-tabs">
         <button
-          className={`tab ${activeTab === 'details' ? 'active' : ''}`}
-          onClick={() => setActiveTab('details')}
+          className={`tab ${activeTab === 'overview' ? 'active' : ''}`}
+          onClick={() => setActiveTab('overview')}
         >
-          Details
+          📊 Overview
         </button>
         <button
           className={`tab ${activeTab === 'signals' ? 'active' : ''}`}
           onClick={() => setActiveTab('signals')}
         >
-          Signals ({incident.signalCount})
+          📡 Signals ({incident.signalCount})
+        </button>
+        <button
+          className={`tab ${activeTab === 'timeline' ? 'active' : ''}`}
+          onClick={() => setActiveTab('timeline')}
+        >
+          ⏱️ Timeline
         </button>
         {canSubmitRCA && (
           <button
             className={`tab ${activeTab === 'rca' ? 'active' : ''}`}
             onClick={() => setActiveTab('rca')}
           >
-            RCA Form
+            🔍 RCA Form
           </button>
         )}
       </div>
 
+      {/* Enhanced Content */}
       <div className="incident-content">
-        {error && <div className="error-message">{error}</div>}
+        {error && (
+          <div className="error-banner">
+            <span className="error-icon">⚠️</span>
+            <span>{error}</span>
+            <button className="error-dismiss" onClick={() => setError('')}>×</button>
+          </div>
+        )}
 
-        {activeTab === 'details' && (
-          <div className="details-tab">
-            <div className="detail-section">
-              <h3>Incident Information</h3>
-              <div className="detail-grid">
-                <div className="detail-item">
-                  <span className="label">Incident ID:</span>
-                  <span className="value">{incident.id}</span>
+        {activeTab === 'overview' && (
+          <div className="overview-tab">
+            {/* Key Metrics Cards */}
+            <div className="metrics-grid">
+              <div className="metric-card">
+                <div className="metric-icon">📊</div>
+                <div className="metric-content">
+                  <div className="metric-value">{incident.signalCount}</div>
+                  <div className="metric-label">Total Signals</div>
                 </div>
-                <div className="detail-item">
-                  <span className="label">Description:</span>
-                  <span className="value">{incident.description}</span>
+              </div>
+
+              <div className="metric-card">
+                <div className="metric-icon">⏱️</div>
+                <div className="metric-content">
+                  <div className="metric-value">{incidentDuration}</div>
+                  <div className="metric-label">Duration</div>
                 </div>
-                <div className="detail-item">
-                  <span className="label">Component Type:</span>
-                  <span className="value">{incident.componentType}</span>
+              </div>
+
+              <div className="metric-card">
+                <div className="metric-icon">👤</div>
+                <div className="metric-content">
+                  <div className="metric-value">{incident.assignedTo || 'Unassigned'}</div>
+                  <div className="metric-label">Assigned To</div>
                 </div>
-                <div className="detail-item">
-                  <span className="label">Component ID:</span>
-                  <span className="value">{incident.componentId}</span>
+              </div>
+
+              {incident.rca && (
+                <div className="metric-card">
+                  <div className="metric-icon">🎯</div>
+                  <div className="metric-content">
+                    <div className="metric-value">{Math.floor(incident.rca.mttr / 60)}m</div>
+                    <div className="metric-label">MTTR</div>
+                  </div>
                 </div>
-                <div className="detail-item">
-                  <span className="label">First Signal:</span>
-                  <span className="value">{new Date(incident.firstSignalTime).toLocaleString()}</span>
+              )}
+            </div>
+
+            {/* Incident Details */}
+            <div className="details-section">
+              <h3>📋 Incident Details</h3>
+              <div className="details-cards">
+                <div className="detail-card">
+                  <h4>Basic Information</h4>
+                  <div className="detail-items">
+                    <div className="detail-item">
+                      <span className="label">Incident ID:</span>
+                      <span className="value code">{incident.id}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="label">Component:</span>
+                      <span className="value">{incident.componentType} - {incident.componentId}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="label">Created:</span>
+                      <span className="value">{new Date(incident.createdAt).toLocaleString()}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="label">Last Updated:</span>
+                      <span className="value">{new Date(incident.updatedAt).toLocaleString()}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="detail-item">
-                  <span className="label">Last Signal:</span>
-                  <span className="value">{new Date(incident.lastSignalTime).toLocaleString()}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="label">Signal Count:</span>
-                  <span className="value">{incident.signalCount}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="label">Assigned To:</span>
-                  <span className="value">{incident.assignedTo || 'Unassigned'}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="label">Created:</span>
-                  <span className="value">{new Date(incident.createdAt).toLocaleString()}</span>
+
+                <div className="detail-card">
+                  <h4>Signal Timeline</h4>
+                  <div className="detail-items">
+                    <div className="detail-item">
+                      <span className="label">First Signal:</span>
+                      <span className="value">{new Date(incident.firstSignalTime).toLocaleString()}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="label">Last Signal:</span>
+                      <span className="value">{new Date(incident.lastSignalTime).toLocaleString()}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="label">Signal Frequency:</span>
+                      <span className="value">
+                        {incident.signalCount > 0
+                          ? `${(incident.signalCount / ((new Date(incident.lastSignalTime).getTime() - new Date(incident.firstSignalTime).getTime()) / (1000 * 60))).toFixed(1)}/min`
+                          : 'N/A'
+                        }
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
+            {/* RCA Section */}
             {incident.rca && (
-              <div className="detail-section">
-                <h3>Root Cause Analysis</h3>
-                <div className="detail-grid">
-                  <div className="detail-item">
-                    <span className="label">Category:</span>
-                    <span className="value">{incident.rca.rootCauseCategory}</span>
+              <div className="details-section">
+                <h3>🔍 Root Cause Analysis</h3>
+                <div className="rca-card">
+                  <div className="rca-header">
+                    <span className="rca-category">{incident.rca.rootCauseCategory}</span>
+                    <span className="rca-mttr">MTTR: {Math.floor(incident.rca.mttr / 60)}m {incident.rca.mttr % 60}s</span>
                   </div>
-                  <div className="detail-item">
-                    <span className="label">MTTR:</span>
-                    <span className="value">{incident.rca.mttr}s ({(incident.rca.mttr / 60).toFixed(2)}m)</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="label">Fix Applied:</span>
-                    <span className="value multiline">{incident.rca.fixApplied}</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="label">Prevention Steps:</span>
-                    <span className="value multiline">{incident.rca.preventionSteps}</span>
+                  <div className="rca-content">
+                    <div className="rca-section">
+                      <h4>Fix Applied</h4>
+                      <p>{incident.rca.fixApplied}</p>
+                    </div>
+                    <div className="rca-section">
+                      <h4>Prevention Steps</h4>
+                      <p>{incident.rca.preventionSteps}</p>
+                    </div>
                   </div>
                 </div>
               </div>
             )}
 
-            <div className="status-actions">
-              <h3>Change Status</h3>
-              <div className="button-group">
+            {/* Status Actions */}
+            <div className="status-actions-section">
+              <h3>⚡ Status Actions</h3>
+              <div className="status-workflow">
+                <div className={`workflow-step ${incident.status === 'OPEN' ? 'active' : incident.status === 'INVESTIGATING' || incident.status === 'RESOLVED' || incident.status === 'CLOSED' ? 'completed' : ''}`}>
+                  <div className="step-icon">🚨</div>
+                  <div className="step-label">Open</div>
+                </div>
+                <div className={`workflow-step ${incident.status === 'INVESTIGATING' ? 'active' : incident.status === 'RESOLVED' || incident.status === 'CLOSED' ? 'completed' : ''}`}>
+                  <div className="step-icon">🔍</div>
+                  <div className="step-label">Investigating</div>
+                </div>
+                <div className={`workflow-step ${incident.status === 'RESOLVED' ? 'active' : incident.status === 'CLOSED' ? 'completed' : ''}`}>
+                  <div className="step-icon">✅</div>
+                  <div className="step-label">Resolved</div>
+                </div>
+                <div className={`workflow-step ${incident.status === 'CLOSED' ? 'active' : ''}`}>
+                  <div className="step-icon">🔒</div>
+                  <div className="step-label">Closed</div>
+                </div>
+              </div>
+
+              <div className="action-buttons">
                 {incident.status === 'OPEN' && (
                   <button
                     onClick={() => handleStatusChange('INVESTIGATING')}
                     disabled={statusTransitioning}
-                    className="btn-investigate"
+                    className="btn-action primary"
                   >
-                    Start Investigation
+                    {statusTransitioning ? '⏳ Starting...' : '🔍 Start Investigation'}
                   </button>
                 )}
                 {incident.status === 'INVESTIGATING' && (
@@ -247,23 +415,24 @@ export const IncidentDetailPage: React.FC = () => {
                     <button
                       onClick={() => handleStatusChange('RESOLVED')}
                       disabled={statusTransitioning}
-                      className="btn-resolve"
+                      className="btn-action success"
                     >
-                      Mark as Resolved
+                      {statusTransitioning ? '⏳ Resolving...' : '✅ Mark as Resolved'}
                     </button>
                     <button
                       onClick={() => handleStatusChange('OPEN')}
                       disabled={statusTransitioning}
-                      className="btn-reopen"
+                      className="btn-action secondary"
                     >
-                      Reopen
+                      {statusTransitioning ? '⏳ Reopening...' : '🔄 Reopen'}
                     </button>
                   </>
                 )}
                 {incident.status === 'RESOLVED' && (
-                  <button disabled className="btn-close" title="Fill RCA form to close">
-                    Complete RCA to Close
-                  </button>
+                  <div className="rca-required-notice">
+                    <span className="notice-icon">📝</span>
+                    <span>RCA form must be completed to close this incident</span>
+                  </div>
                 )}
               </div>
             </div>
@@ -272,6 +441,53 @@ export const IncidentDetailPage: React.FC = () => {
 
         {activeTab === 'signals' && (
           <SignalsList signals={signals} isLoading={signalsLoading} />
+        )}
+
+        {activeTab === 'timeline' && (
+          <div className="timeline-tab">
+            <h3>⏱️ Incident Timeline</h3>
+            <div className="timeline">
+              <div className="timeline-item">
+                <div className="timeline-marker created"></div>
+                <div className="timeline-content">
+                  <div className="timeline-title">Incident Created</div>
+                  <div className="timeline-time">{new Date(incident.createdAt).toLocaleString()}</div>
+                  <div className="timeline-desc">First signal received from {incident.componentId}</div>
+                </div>
+              </div>
+
+              <div className="timeline-item">
+                <div className="timeline-marker first-signal"></div>
+                <div className="timeline-content">
+                  <div className="timeline-title">First Signal</div>
+                  <div className="timeline-time">{new Date(incident.firstSignalTime).toLocaleString()}</div>
+                  <div className="timeline-desc">Initial signal detected</div>
+                </div>
+              </div>
+
+              {incident.status !== 'OPEN' && (
+                <div className="timeline-item">
+                  <div className={`timeline-marker status-${incident.status.toLowerCase()}`}></div>
+                  <div className="timeline-content">
+                    <div className="timeline-title">Status Changed</div>
+                    <div className="timeline-time">{new Date(incident.updatedAt).toLocaleString()}</div>
+                    <div className="timeline-desc">Status updated to {incident.status}</div>
+                  </div>
+                </div>
+              )}
+
+              {incident.rca && (
+                <div className="timeline-item">
+                  <div className="timeline-marker rca"></div>
+                  <div className="timeline-content">
+                    <div className="timeline-title">RCA Completed</div>
+                    <div className="timeline-time">{new Date(incident.rca.createdAt).toLocaleString()}</div>
+                    <div className="timeline-desc">Root cause analysis submitted</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         )}
 
         {activeTab === 'rca' && canSubmitRCA && (
