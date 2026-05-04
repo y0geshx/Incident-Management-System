@@ -324,6 +324,41 @@ describe("POST /api/incidents", () => {
   });
 });
 
+describe("POST /api/signals/random", () => {
+  test("generates and ingests a random signal", async () => {
+    const signalService = {
+      processSignal: jest.fn().mockResolvedValue(undefined),
+      getSignalsForWorkItem: jest.fn(),
+    };
+    const incidentService = {};
+
+    const app = express();
+    app.use(express.json());
+    app.use("/api", createSignalRoutes(signalService as any, incidentService as any));
+
+    const response = await request(app).post("/api/signals/random").send({});
+
+    expect(response.status).toBe(202);
+    expect(response.body.message).toBe("Random signal accepted for processing");
+    expect(response.body.signal).toMatchObject({
+      id: expect.any(String),
+      componentId: expect.any(String),
+      componentType: expect.any(String),
+      errorCode: expect.any(String),
+      errorMessage: expect.any(String),
+      severity: expect.any(String),
+      metadata: expect.any(Object),
+      timestamp: expect.any(String),
+    });
+    expect(signalService.processSignal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: expect.any(String),
+        componentId: expect.any(String),
+      })
+    );
+  });
+});
+
 describe("PUT /api/incidents/:id/status workflow", () => {
   const makeWorkItem = (id: string, status: WorkItemState): WorkItem => ({
     id,

@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Signal, ComponentType, Severity, WorkItemState, WorkItem } from "../types";
 import { SignalProcessingService } from "../services/SignalProcessingService";
 import { IncidentManagementService } from "../services/IncidentManagementService";
+import { buildRandomSignal } from "../utils/randomSignal";
 
 interface SignalPayload {
   componentId: string;
@@ -17,6 +18,11 @@ interface SignalPayload {
   metadata?: Record<string, unknown>;
   stackTrace?: string;
   latency?: number;
+}
+
+interface RandomSignalRequestBody {
+  componentType?: ComponentType;
+  severity?: Severity;
 }
 
 interface RCARequestBody {
@@ -91,6 +97,39 @@ export function createSignalRoutes(
       res.status(202).json({
         message: "Signal accepted for processing",
         signalId: signal.id,
+      });
+    } catch (error) {
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  });
+
+  /**
+   * POST /api/signals/random
+   * Generate and ingest a random signal
+   */
+  router.post("/signals/random", async (req: Request, res: Response) => {
+    try {
+      const { componentType, severity } = req.body as RandomSignalRequestBody;
+
+      if (componentType && !Object.values(ComponentType).includes(componentType)) {
+        res.status(400).json({ error: "Invalid componentType" });
+        return;
+      }
+
+      if (severity && !Object.values(Severity).includes(severity)) {
+        res.status(400).json({ error: "Invalid severity" });
+        return;
+      }
+
+      const signal = buildRandomSignal({ componentType, severity });
+
+      await signalService.processSignal(signal);
+
+      res.status(202).json({
+        message: "Random signal accepted for processing",
+        signal,
       });
     } catch (error) {
       res.status(500).json({
