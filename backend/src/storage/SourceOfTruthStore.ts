@@ -402,6 +402,21 @@ export class SourceOfTruthStore {
     }));
   }
 
+  async healthCheck(): Promise<boolean> {
+    if (!this.pool) {
+      throw new Error("Not connected to Source of Truth");
+    }
+    try {
+      // Test connection by executing a simple query
+      const result = await this.pool.query("SELECT 1");
+      return result.rows.length > 0;
+    } catch (error) {
+      throw new Error(
+        `PostgreSQL health check failed: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
+    }
+  }
+
   async disconnect(): Promise<void> {
     if (this.pool) {
       await this.pool.end();

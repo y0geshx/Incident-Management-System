@@ -13,6 +13,8 @@ import { SignalProcessingService } from "./services/SignalProcessingService";
 import { IncidentManagementService } from "./services/IncidentManagementService";
 import { rateLimitMiddleware } from "./middleware/rateLimitMiddleware";
 import { createSignalRoutes } from "./routes/signals";
+import { createHealthRoutes } from "./routes/health";
+import { openApiDocument } from "./openapi";
 import { Logger } from "./utils/Logger";
 
 class IMSApplication {
@@ -78,7 +80,48 @@ class IMSApplication {
       this.signalService,
       this.incidentService
     );
+    const healthRoutes = createHealthRoutes(
+      this.dataLakeStore,
+      this.sourceOfTruthStore,
+      this.cacheStore
+    );
+    
+    this.app.use("/api", healthRoutes);
     this.app.use("/api", signalRoutes);
+
+    this.app.get("/api/openapi.json", (_req, res) => {
+      res.json(openApiDocument);
+    });
+
+    this.app.get("/api/docs", (_req, res) => {
+      res.type("html").send(`<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>IMS API Docs</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+    <style>
+      html, body { margin: 0; padding: 0; }
+      #swagger-ui { min-height: 100vh; }
+    </style>
+  </head>
+  <body>
+    <div id="swagger-ui"></div>
+    <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+    <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-standalone-preset.js"></script>
+    <script>
+      window.ui = SwaggerUIBundle({
+        url: '/api/openapi.json',
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+        layout: 'StandaloneLayout',
+      });
+    </script>
+  </body>
+</html>`);
+    });
 
     const frontendDistPath = path.resolve(__dirname, "../../frontend/dist");
 

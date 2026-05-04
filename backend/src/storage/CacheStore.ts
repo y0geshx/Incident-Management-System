@@ -147,6 +147,21 @@ export class CacheStore {
     return result === 1;
   }
 
+  async healthCheck(): Promise<boolean> {
+    if (!this.client) {
+      throw new Error("Not connected to Cache Store");
+    }
+    try {
+      // Perform a simple PING command to verify connection
+      await this.client.ping();
+      return true;
+    } catch (error) {
+      throw new Error(
+        `Redis health check failed: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
+    }
+  }
+
   async disconnect(): Promise<void> {
     if (this.client) {
       await this.client.quit();

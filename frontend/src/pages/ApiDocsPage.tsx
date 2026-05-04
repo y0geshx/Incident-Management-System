@@ -35,15 +35,26 @@ const rcaExample = `curl -X POST http://localhost:3001/api/incidents/{incidentId
 
 const healthExample = `curl http://localhost:3001/api/health`;
 
+const openApiExample = `curl http://localhost:3001/api/openapi.json`;
+
 export const ApiDocsPage: React.FC = () => {
   const navigate = useNavigate();
+
+  const handleOpenSwaggerDocs = () => {
+    window.open('/api/docs', '_blank', 'noopener,noreferrer');
+  };
 
   return (
     <div className="api-docs-page">
       <header className="api-docs-header">
-        <button className="api-docs-back-btn" onClick={() => navigate('/')}>
-          Back to Dashboard
-        </button>
+        <div className="api-docs-header-actions">
+          <button className="api-docs-back-btn" onClick={() => navigate('/')}>
+            Back to Dashboard
+          </button>
+          <button className="api-docs-swagger-btn" onClick={handleOpenSwaggerDocs}>
+            Open Swagger UI
+          </button>
+        </div>
         <h1>API Documentation</h1>
         <p>Reference for incident, signals, RCA, and health endpoints.</p>
       </header>
@@ -84,6 +95,16 @@ export const ApiDocsPage: React.FC = () => {
             <li><strong>GET</strong> /health</li>
           </ul>
           <pre>{healthExample}</pre>
+        </section>
+
+        <section className="api-docs-section">
+          <h2>OpenAPI Contract</h2>
+          <p>The machine-readable API specification is served by the backend.</p>
+          <ul>
+            <li><strong>GET</strong> /openapi.json</li>
+            <li><strong>GET</strong> /docs - Swagger UI</li>
+          </ul>
+          <pre>{openApiExample}</pre>
         </section>
 
         <section className="api-docs-section">

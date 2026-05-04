@@ -66,6 +66,11 @@ class IMSApiClient {
     return response.data;
   }
 
+  async simulateCascadingFailure(): Promise<{ message: string; count: number }> {
+    const response = await this.client.post<{ message: string; count: number }>('/signals/cascading-failure', {});
+    return response.data;
+  }
+
   async getIncidentSignals(id: string): Promise<{ data: Signal[]; total: number }> {
     const response = await this.client.get<{ data: Signal[]; total: number }>(`/incidents/${id}/signals`);
     return response.data;

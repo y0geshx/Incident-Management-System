@@ -111,6 +111,9 @@ Access the system:
 - **Dashboard**: http://localhost:3000
 - **API**: http://localhost:3001/api
 - **Health**: http://localhost:3001/api/health
+- **OpenAPI**: http://localhost:3001/api/openapi.json
+- **Swagger UI**: http://localhost:3001/api/docs
+- **Docs**: http://localhost:3000/api-docs
 
 ### Option 2: Local Development
 

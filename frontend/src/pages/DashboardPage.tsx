@@ -5,6 +5,12 @@ import { apiClient, getApiErrorMessage } from '../services/apiClient';
 import { WorkItem } from '../types';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
+interface SystemStatus {
+  status: 'operational' | 'degraded' | 'down';
+  timestamp: string;
+  services: { name: string; status: 'healthy' | 'degraded' | 'unhealthy' }[];
+}
+
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -12,6 +18,7 @@ export const DashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [emittingRandomSignal, setEmittingRandomSignal] = useState(false);
+  const [simulatingCascadingFailure, setSimulatingCascadingFailure] = useState(false);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState<string>(searchParams.get('status') || 'all');
   const [severityFilter, setSeverityFilter] = useState<string>(searchParams.get('severity') || 'all');
@@ -19,12 +26,17 @@ export const DashboardPage: React.FC = () => {
   const [lastUpdated, setLastUpdated] = useState<string>('---');
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
 
   useEffect(() => {
     fetchIncidents();
+    fetchSystemStatus();
     let interval: ReturnType<typeof setInterval> | undefined;
     if (autoRefresh) {
-      interval = setInterval(() => fetchIncidents(), 5000); // Refresh every 5 seconds
+      interval = setInterval(() => {
+        fetchIncidents();
+        fetchSystemStatus();
+      }, 5000); // Refresh every 5 seconds
     }
     return () => {
       if (interval) clearInterval(interval);
@@ -52,6 +64,15 @@ export const DashboardPage: React.FC = () => {
     } finally {
       setLoading(false);
       setRefreshing(false);
+    }
+  };
+
+  const fetchSystemStatus = async () => {
+    try {
+      const data = await apiClient.getHealth();
+      setSystemStatus(data);
+    } catch (err) {
+      console.error('Failed to fetch system status:', err);
     }
   };
 
@@ -123,8 +144,25 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
+  const handleSimulateCascadingFailure = async () => {
+    try {
+      setSimulatingCascadingFailure(true);
+      setError('');
+      await apiClient.simulateCascadingFailure();
+      await fetchIncidents(true);
+    } catch (err) {
+      setError(`Failed to simulate cascading failure: ${getApiErrorMessage(err)}`);
+    } finally {
+      setSimulatingCascadingFailure(false);
+    }
+  };
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
+  };
+
+  const handleOpenSwaggerDocs = () => {
+    window.open('/api/docs', '_blank', 'noopener,noreferrer');
   };
 
   const filteredIncidents = filterIncidents();
@@ -136,6 +174,16 @@ export const DashboardPage: React.FC = () => {
           <div className="dashboard-title-group">
             <h1>🚨 Incident Management System</h1>
             <span className="live-feed-label">Live Feed</span>
+            <span className={`systems-nominal-label ${systemStatus?.status || 'operational'}`}>
+              <span 
+                className="systems-nominal-icon" 
+                data-status={systemStatus?.status || 'operational'}
+                aria-hidden="true" 
+              />
+              {systemStatus?.status === 'degraded' && 'SYSTEMS DEGRADED'}
+              {systemStatus?.status === 'down' && 'SYSTEM DOWN'}
+              {(!systemStatus || systemStatus.status === 'operational') && 'ALL SYSTEMS NOMINAL'}
+            </span>
           </div>
           <div className="dashboard-header-actions">
             <button className="api-docs-btn" onClick={() => navigate('/incident/new')}>
@@ -149,11 +197,29 @@ export const DashboardPage: React.FC = () => {
             >
               {emittingRandomSignal ? 'Emitting...' : 'Emit Random Signal'}
             </button>
+            <button
+              className="api-docs-btn"
+              onClick={handleSimulateCascadingFailure}
+              disabled={simulatingCascadingFailure}
+              title="Simulate a cascading failure scenario with multiple signals"
+            >
+              {simulatingCascadingFailure ? 'Simulating...' : 'Simulate Cascading Failure'}
+            </button>
             <button className="api-docs-btn" onClick={() => navigate('/metrics')}>
               Metrics Dashboard
             </button>
+            <button className="api-docs-btn" onClick={() => navigate('/service-status')}>
+              Service Status
+            </button>
             <button className="api-docs-btn" onClick={() => navigate('/api-docs')}>
               API Docs
+            </button>
+            <button
+              className="api-docs-btn"
+              onClick={handleOpenSwaggerDocs}
+              title="Open interactive Swagger UI"
+            >
+              Swagger UI
             </button>
           </div>
         </div>

@@ -400,4 +400,4 @@ console.log(`MTTR: ${rca.mttr} seconds`);
 
 ---
 
-For comprehensive API documentation, see OpenAPI spec (coming soon)
+For comprehensive API documentation, see the live OpenAPI spec at http://localhost:3001/api/openapi.json.

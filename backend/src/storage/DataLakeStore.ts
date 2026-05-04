@@ -90,6 +90,21 @@ export class DataLakeStore {
     return signals;
   }
 
+  async healthCheck(): Promise<boolean> {
+    if (!this.client) {
+      throw new Error("Not connected to Data Lake");
+    }
+    try {
+      // Perform a simple operation to verify connection
+      await this.db!.admin().ping();
+      return true;
+    } catch (error) {
+      throw new Error(
+        `MongoDB health check failed: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
+    }
+  }
+
   async disconnect(): Promise<void> {
     if (this.client) {
       await this.client.close();

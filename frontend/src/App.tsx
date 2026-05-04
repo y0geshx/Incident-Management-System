@@ -5,6 +5,7 @@ import { IncidentDetailPage } from './pages/IncidentDetailPage';
 import { NewIncidentPage } from './pages/NewIncidentPage';
 import { ApiDocsPage } from './pages/ApiDocsPage';
 import { MetricsPage } from './pages/MetricsPage';
+import { ServiceStatusPage } from './pages/ServiceStatusPage';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
           <Route path="/incident/:id" element={<IncidentDetailPage />} />
           <Route path="/api-docs" element={<ApiDocsPage />} />
           <Route path="/metrics" element={<MetricsPage />} />
+          <Route path="/service-status" element={<ServiceStatusPage />} />
         </Routes>
       </div>
     </Router>

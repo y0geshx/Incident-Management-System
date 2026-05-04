@@ -139,6 +139,125 @@ export function createSignalRoutes(
   });
 
   /**
+   * POST /api/signals/cascading-failure
+   * Simulate a cascading failure scenario with multiple signals
+   */
+  router.post("/signals/cascading-failure", async (_req: Request, res: Response) => {
+    try {
+      const cascadingSignals: SignalPayload[] = [
+        // RDBMS Failure - P0 Critical
+        {
+          componentId: "RDBMS_CLUSTER_01",
+          componentType: ComponentType.RDBMS,
+          errorCode: "CONNECTION_POOL_EXHAUSTED",
+          errorMessage: "All connections in pool exhausted. Database unavailable.",
+          severity: Severity.P0,
+          metadata: {
+            poolSize: 100,
+            activeConnections: 100,
+            waitingRequests: 5432,
+          },
+          stackTrace: `Error: Connection timeout\n    at DatabasePool.getConnection (db/pool.ts:45:12)\n    at Query.execute (db/query.ts:78:9)`,
+          latency: 30000,
+        },
+        // Cascading API failures
+        {
+          componentId: "API_GATEWAY_01",
+          componentType: ComponentType.API,
+          errorCode: "DOWNSTREAM_ERROR",
+          errorMessage: "Database unavailable - cascading failure detected",
+          severity: Severity.P1,
+          metadata: {
+            downstreamService: "RDBMS_CLUSTER_01",
+            errorRate: 0.95,
+            averageLatency: 25000,
+          },
+          latency: 25000,
+        },
+        // Cache cluster degradation
+        {
+          componentId: "CACHE_CLUSTER_01",
+          componentType: ComponentType.CACHE_CLUSTER,
+          errorCode: "HIGH_MEMORY_USAGE",
+          errorMessage: "Cache cluster memory usage at 92%",
+          severity: Severity.P2,
+          metadata: {
+            memoryUsagePercent: 92,
+            evictionRate: 1200,
+            hitRate: 0.45,
+          },
+        },
+        // Async Queue backed up
+        {
+          componentId: "ASYNC_QUEUE_01",
+          componentType: ComponentType.ASYNC_QUEUE,
+          errorCode: "QUEUE_BACKLOG",
+          errorMessage: "Queue backlog exceeds threshold: 50000 jobs pending",
+          severity: Severity.P1,
+          metadata: {
+            pendingJobs: 50000,
+            processingRate: 100,
+            estimatedClearTime: "8 hours",
+          },
+        },
+        // MCP Host failure
+        {
+          componentId: "MCP_HOST_02",
+          componentType: ComponentType.MCP_HOST,
+          errorCode: "SERVICE_UNAVAILABLE",
+          errorMessage: "MCP Host 02 is down - health checks failing",
+          severity: Severity.P0,
+          metadata: {
+            healthCheckAttempts: 5,
+            lastSuccessfulCheck: "2024-01-15T10:25:00Z",
+            failureReason: "Connection refused",
+          },
+          stackTrace: `Error: connect ECONNREFUSED 192.168.1.52:8080\n    at TCPConnectWrap.afterConnect [as oncomplete] (net.js:1141:15)`,
+        },
+        // NoSQL store replication lag
+        {
+          componentId: "NOSQL_STORE_01",
+          componentType: ComponentType.NOSQL_STORE,
+          errorCode: "REPLICATION_LAG_HIGH",
+          errorMessage: "MongoDB replication lag exceeds acceptable threshold: 5000ms",
+          severity: Severity.P2,
+          metadata: {
+            replicationLagMs: 5000,
+            primaryWriteRate: 5000,
+            secondaryReadLag: 5200,
+          },
+        },
+      ];
+
+      const signals: Signal[] = cascadingSignals.map((payload: SignalPayload) => ({
+        id: uuidv4(),
+        componentId: payload.componentId,
+        componentType: payload.componentType,
+        errorCode: payload.errorCode,
+        errorMessage: payload.errorMessage,
+        severity: payload.severity || Severity.P3,
+        timestamp: new Date(),
+        metadata: payload.metadata || {},
+        stackTrace: payload.stackTrace,
+        latency: payload.latency,
+      }));
+
+      for (const signal of signals) {
+        await signalService.processSignal(signal);
+      }
+
+      res.status(202).json({
+        message: "Cascading failure signals accepted for processing",
+        count: signals.length,
+      });
+    } catch (error) {
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  });
+
+  /**
    * POST /api/signals/batch
    * Ingest multiple signals
    */
