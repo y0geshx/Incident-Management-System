@@ -58,6 +58,14 @@ class IMSApiClient {
     return response.data;
   }
 
+  async emitRandomSignal(data?: {
+    componentType?: string;
+    severity?: string;
+  }): Promise<{ message: string; signal: Signal }> {
+    const response = await this.client.post<{ message: string; signal: Signal }>('/signals/random', data ?? {});
+    return response.data;
+  }
+
   async getIncidentSignals(id: string): Promise<{ data: Signal[]; total: number }> {
     const response = await this.client.get<{ data: Signal[]; total: number }>(`/incidents/${id}/signals`);
     return response.data;

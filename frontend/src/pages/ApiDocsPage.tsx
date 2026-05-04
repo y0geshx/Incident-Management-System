@@ -12,6 +12,10 @@ const signalExample = `curl -X POST http://localhost:3001/api/signals \\
     "severity": "P0"
   }'`;
 
+const randomSignalExample = `curl -X POST http://localhost:3001/api/signals/random \
+  -H "Content-Type: application/json" \
+  -d '{}'`;
+
 const incidentsExample = `curl http://localhost:3001/api/incidents`;
 
 const statusTransitionExample = `curl -X PUT http://localhost:3001/api/incidents/{incidentId}/status \\
@@ -54,9 +58,11 @@ export const ApiDocsPage: React.FC = () => {
           <h2>Signal Ingestion</h2>
           <ul>
             <li><strong>POST</strong> /signals</li>
+            <li><strong>POST</strong> /signals/random</li>
             <li><strong>POST</strong> /signals/batch</li>
           </ul>
           <pre>{signalExample}</pre>
+          <pre>{randomSignalExample}</pre>
         </section>
 
         <section className="api-docs-section">

@@ -11,6 +11,7 @@ export const DashboardPage: React.FC = () => {
   const [incidents, setIncidents] = useState<WorkItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [emittingRandomSignal, setEmittingRandomSignal] = useState(false);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState<string>(searchParams.get('status') || 'all');
   const [severityFilter, setSeverityFilter] = useState<string>(searchParams.get('severity') || 'all');
@@ -109,6 +110,19 @@ export const DashboardPage: React.FC = () => {
     setAutoRefresh(!autoRefresh);
   };
 
+  const handleEmitRandomSignal = async () => {
+    try {
+      setEmittingRandomSignal(true);
+      setError('');
+      await apiClient.emitRandomSignal();
+      await fetchIncidents(true);
+    } catch (err) {
+      setError(`Failed to emit random signal: ${getApiErrorMessage(err)}`);
+    } finally {
+      setEmittingRandomSignal(false);
+    }
+  };
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
@@ -126,6 +140,14 @@ export const DashboardPage: React.FC = () => {
           <div className="dashboard-header-actions">
             <button className="api-docs-btn" onClick={() => navigate('/incident/new')}>
               New Incident
+            </button>
+            <button
+              className="api-docs-btn"
+              onClick={handleEmitRandomSignal}
+              disabled={emittingRandomSignal}
+              title="Generate and ingest a random signal"
+            >
+              {emittingRandomSignal ? 'Emitting...' : 'Emit Random Signal'}
             </button>
             <button className="api-docs-btn" onClick={() => navigate('/metrics')}>
               Metrics Dashboard
