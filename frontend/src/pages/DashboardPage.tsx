@@ -16,7 +16,7 @@ export const DashboardPage: React.FC = () => {
   const [severityFilter, setSeverityFilter] = useState<string>(searchParams.get('severity') || 'all');
   const [tagFilter, setTagFilter] = useState<string>(searchParams.get('component') || 'all');
   const [lastUpdated, setLastUpdated] = useState<string>('---');
-  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   useEffect(() => {
@@ -128,7 +128,7 @@ export const DashboardPage: React.FC = () => {
               New Incident
             </button>
             <button className="api-docs-btn" onClick={() => navigate('/metrics')}>
-              Metrics Page
+              Metrics Dashboard
             </button>
             <button className="api-docs-btn" onClick={() => navigate('/api-docs')}>
               API Docs
