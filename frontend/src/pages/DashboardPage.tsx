@@ -119,8 +119,14 @@ export const DashboardPage: React.FC = () => {
     <div className="dashboard-page">
       <header className="dashboard-header">
         <div className="dashboard-header-top">
-          <h1>🚨 Incident Management System</h1>
+          <div className="dashboard-title-group">
+            <h1>🚨 Incident Management System</h1>
+            <span className="live-feed-label">Live Feed</span>
+          </div>
           <div className="dashboard-header-actions">
+            <button className="api-docs-btn" onClick={() => navigate('/incident/new')}>
+              New Incident
+            </button>
             <button className="api-docs-btn" onClick={() => navigate('/metrics')}>
               Metrics Page
             </button>
