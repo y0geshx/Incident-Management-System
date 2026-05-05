@@ -15,50 +15,60 @@ The IMS monitors complex distributed stacks (APIs, MCP Hosts, Distributed Caches
 
 ## 🏗️ System Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         INCIDENT MANAGEMENT SYSTEM                  │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                       │
-│  ┌──────────────────────────────────────────────────────────────┐  │
-│  │                  FRONTEND (React + TypeScript)               │  │
-│  │  • Live Feed (incidents sorted by severity)                 │  │
-│  │  • Incident Details (signals + RCA status)                  │  │
-│  │  • RCA Form (date pickers, categories, text fields)         │  │
-│  └──────────────────────────────────────────────────────────────┘  │
-│                              ↑↓                                       │
-│  ┌──────────────────────────────────────────────────────────────┐  │
-│  │            BACKEND API (Express + TypeScript)                │  │
-│  │                                                               │  │
-│  │  ┌────────────────────────────────────────────────────────┐ │  │
-│  │  │  Signal Ingestion & Debouncing Layer                  │ │  │
-│  │  │  • Rate Limiter (10k signals/sec max)                 │ │  │
-│  │  │  • Signal Debouncer (100 signals → 1 Work Item)      │ │  │
-│  │  │  • In-Memory Buffering (prevents crash if DB slow)   │ │  │
-│  │  └────────────────────────────────────────────────────────┘ │  │
-│  │                         ↓                                     │  │
-│  │  ┌────────────────────────────────────────────────────────┐ │  │
-│  │  │  Workflow Engine (State & Strategy Patterns)           │ │  │
-│  │  │  • State Pattern: OPEN → INVESTIGATING → RESOLVED      │ │  │
-│  │  │                   → CLOSED (with RCA)                  │ │  │
-│  │  │  • Strategy Pattern: Dynamic alerting based on type    │ │  │
-│  │  │    - P0 (RDBMS): PagerDuty + Email + SMS              │ │  │
-│  │  │    - P1 (MCP/Queue): Slack + Email                    │ │  │
-│  │  │    - P2 (Cache): Slack only                           │ │  │
-│  │  │    - P3 (API): Email to logs                          │ │  │
-│  │  └────────────────────────────────────────────────────────┘ │  │
-│  └──────────────────────────────────────────────────────────────┘  │
-│                         ↓ ↓ ↓ ↓                                      │
-│  ┌──────────────┬─────────────────┬──────────────┬──────────────┐  │
-│  │              │                 │              │              │  │
-│  ▼              ▼                 ▼              ▼              ▼  │
-│┌──────────────┐┌──────────────┐┌───────────┐┌──────────────┐     │
-││   MongoDB    ││   PostgreSQL ││   Redis   ││   TimeDB     │     │
-││  Data Lake   ││ Source of    ││   Cache   ││Aggregations │     │
-││(Audit Logs)  ││ Truth (Work  ││(Dashboard││(Analytics)  │     │
-││              ││ Items/RCA)   ││ State)   ││             │     │
-│└──────────────┘└──────────────┘└───────────┘└──────────────┘     │
-└─────────────────────────────────────────────────────────────────────┘
+The following diagram illustrates the high-level architecture of the Incident Management System, organized into three primary layers:
+
+- **Presentation Layer** — React-based SPA for incident monitoring and RCA submission
+- **Application Layer** — Express API server with signal ingestion pipeline and workflow orchestration
+- **Data Layer** — Polyglot persistence with specialized databases for each concern
+
+```mermaid
+flowchart TB
+    subgraph Presentation["PRESENTATION LAYER"]
+        UI["React + TypeScript SPA<br/>• Real-Time Incident Feed<br/>• Incident Detail View<br/>• RCA Submission Interface"]
+    end
+
+    subgraph Application["APPLICATION LAYER"]
+        subgraph Pipeline["Signal Ingestion Pipeline"]
+            RL["Rate Limiter<br/>≤10k sig/s"]
+            DB["Signal Debouncer<br/>100:1 Consolidation"]
+            BP["Buffer Pool<br/>Backpressure"]
+            RL --> DB --> BP
+        end
+        API["Express + TypeScript API Server"]
+        subgraph Workflow["Workflow Orchestrator"]
+            FSM["State Machine<br/>OPEN → INVESTIGATING → RESOLVED → CLOSED"]
+            NS["Notification Strategies<br/>P0: PagerDuty+Email+SMS<br/>P1: Slack+Email<br/>P2: Slack<br/>P3: Email Digest"]
+        end
+        Pipeline --> API --> Workflow
+    end
+
+    subgraph Data["DATA LAYER"]
+        Mongo[("MongoDB<br/>Data Lake<br/>Audit Logs / Raw Signals")]
+        Postgres[("PostgreSQL<br/>Source of Truth<br/>Work Items / RCA Records")]
+        RedisCache[("Redis<br/>Cache Layer<br/>Session / Rate Limits")]
+        Timescale[("TimescaleDB<br/>Analytics<br/>Aggregations / Trends")]
+    end
+
+    UI <-->|"REST / WebSocket"| API
+    API ---> Mongo
+    API ---> Postgres
+    API ---> RedisCache
+    API ---> Timescale
+
+    style Presentation fill:#1a1b2e,stroke:#2a2d5a,color:#c8d6e5
+    style Application fill:#0d1b3e,stroke:#1e3a6d,color:#c8d6e5
+    style Data fill:#1a1b2e,stroke:#2a2d5a,color:#c8d6e5
+    style UI fill:#c0392b,stroke:#e74c3c,color:#fff
+    style API fill:#6c3483,stroke:#8e44ad,color:#fff
+    style RL fill:#1a5276,stroke:#2980b9,color:#d4e6f1
+    style DB fill:#1a5276,stroke:#2980b9,color:#d4e6f1
+    style BP fill:#1a5276,stroke:#2980b9,color:#d4e6f1
+    style FSM fill:#0e4d3b,stroke:#1abc9c,color:#d5f5e3
+    style NS fill:#0e4d3b,stroke:#1abc9c,color:#d5f5e3
+    style Mongo fill:#1c2833,stroke:#5d6d7e,color:#d5dbdb
+    style Postgres fill:#1c2833,stroke:#5d6d7e,color:#d5dbdb
+    style RedisCache fill:#1c2833,stroke:#5d6d7e,color:#d5dbdb
+    style Timescale fill:#1c2833,stroke:#5d6d7e,color:#d5dbdb
 ```
 
 ## 📦 Tech Stack
@@ -96,7 +106,7 @@ The IMS monitors complex distributed stacks (APIs, MCP Hosts, Distributed Caches
 cd imgassig
 
 # Start all services
-docker-compose up -d
+docker-compose up --build -d
 
 # View logs
 docker-compose logs -f backend
@@ -206,23 +216,31 @@ Cache Invalidation: On updates
 - Improves dashboard responsiveness
 - Prevents thundering herd on database
 
-### Flow Diagram
-```
-Incoming Signal
-    ↓
-[Rate Limiter Check] → 429 if exceeded
-    ↓ (Allowed)
-[Signal Debouncer] → In-memory buffering
-    ↓ (Timeout or Threshold)
-[Store in Data Lake] → MongoDB (async)
-    ↓
-[Create/Update Work Item] → PostgreSQL (transactional)
-    ↓
-[Invalidate Cache] → Redis
-    ↓
-[Trigger Alerting] → Strategy-based routing
-    ↓
-Dashboard Updates (Real-time via polling)
+## Signal Processing Flow
+
+When a signal enters the system, it passes through the following pipeline:
+
+1. **Rate Limiting** — Rejects excess traffic with `429` responses
+2. **Debouncing** — Consolidates bursts of up to 100 related signals
+3. **Persistence** — Async write to MongoDB Data Lake, then transactional write to PostgreSQL
+4. **Cache Invalidation** — Clears affected Redis keys
+5. **Alerting** — Severity-based routing through the Notification Router
+6. **Dashboard** — Real-time UI updates via polling
+
+```mermaid
+flowchart TD
+    A[Incoming Signal] --> B{Rate Limiter Check}
+    B -->|"Exceeded"| C[429 Too Many Requests]
+    B -->|"Allowed"| D[Signal Debouncer\nIn-Memory Buffering]
+    D -->|"Timeout or Threshold"| E[(MongoDB\nData Lake\nAsync Write)]
+    E --> F[(PostgreSQL\nWork Item\nTransactional)]
+    F --> G[(Redis\nCache Invalidation)]
+    G --> H{Notification Router}
+    H -->|"P0"| I1[PagerDuty + Email + SMS]
+    H -->|"P1"| I2[Slack + Email]
+    H -->|"P2"| I3[Slack Only]
+    H -->|"P3"| I4[Email Digest]
+    I1 & I2 & I3 & I4 --> J[Dashboard Update\nReal-Time Polling]
 ```
 
 ## 🎨 Design Patterns Used
@@ -407,26 +425,6 @@ GET /api/health
 - Mandatory field validation
 - Auto-closure on submission
 
-## 🔐 Production Readiness
-
-### Deployed With
-- [ ] TLS/SSL encryption (Nginx reverse proxy)
-- [ ] Authentication (JWT or OAuth2)
-- [ ] Authorization (RBAC)
-- [ ] Audit logging
-- [ ] Database backups
-- [ ] Monitoring & alerting (Prometheus + Grafana)
-- [ ] Log aggregation (ELK stack)
-- [ ] APM (New Relic / DataDog)
-
-### Kubernetes Deployment
-```yaml
-# Future: Helm charts for K8s deployment
-# Services: Backend (Deployment), Frontend (Deployment)
-# StatefulSets: PostgreSQL, MongoDB, Redis
-# ConfigMaps: Environment variables
-# Secrets: DB credentials, API keys
-```
 
 ## 📝 Environment Variables
 
@@ -441,25 +439,3 @@ DB_HOST=localhost
 DB_USER=postgres
 RATE_LIMIT_MAX_SIGNALS=10000
 ```
-
-## 🤝 Contributing
-
-1. Create feature branch: `git checkout -b feature/xyz`
-2. Commit changes: `git commit -am 'Add feature'`
-3. Push branch: `git push origin feature/xyz`
-4. Open pull request
-
-## 📄 License
-
-Proprietary - All rights reserved
-
-## 🆘 Support
-
-For issues or questions:
-1. Check documentation in `/docs`
-2. Review issue templates
-3. Open GitHub issue with details
-
----
-
-**Built with ❤️ for resilient incident management**
