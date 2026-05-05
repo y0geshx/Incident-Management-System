@@ -89,6 +89,23 @@
   cursor: not-allowed;
 }
 
+.form-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: formSpin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes formSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .error-message {
   background-color: #ffebee;
   color: #c62828;

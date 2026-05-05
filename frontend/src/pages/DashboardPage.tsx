@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../styles/DashboardPage.css';
 import { IncidentCard } from '../components/IncidentCard';
 import { apiClient, getApiErrorMessage } from '../services/apiClient';
 import { WorkItem } from '../types';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useRealtimeUpdates } from '../hooks/useRealtimeUpdates';
 
 interface SystemStatus {
   status: 'operational' | 'degraded' | 'down';
@@ -28,7 +29,7 @@ export const DashboardPage: React.FC = () => {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
-  const [showStatusFilters, setShowStatusFilters] = useState(false);
+  const [showStatusFilters, setShowStatusFilters] = useState(true);
   const [showSeverityFilters, setShowSeverityFilters] = useState(false);
   const [showComponentFilters, setShowComponentFilters] = useState(false);
 
@@ -46,6 +47,17 @@ export const DashboardPage: React.FC = () => {
       if (interval) clearInterval(interval);
     };
   }, [autoRefresh]);
+
+  // Setup realtime updates via WebSocket
+  const handleIncidentChange = useCallback(() => {
+    void fetchIncidents(true);
+  }, []);
+
+  useRealtimeUpdates({
+    onIncidentCreated: handleIncidentChange,
+    onIncidentUpdated: handleIncidentChange,
+    enabled: true,
+  });
 
   const fetchIncidents = async (manual = false) => {
     try {
@@ -486,6 +498,12 @@ export const DashboardPage: React.FC = () => {
           <div className="refresh-info">
             <span>Dashboard updated at {lastUpdated}</span>
             <span>Auto-refresh {autoRefresh ? 'enabled' : 'disabled'}</span>
+            {(refreshing || emittingRandomSignal || simulatingCascadingFailure) && (
+              <span className="updating-indicator" aria-live="polite">
+                <span className="dashboard-spinner" aria-hidden="true" />
+                Updating feed...
+              </span>
+            )}
           </div>
           <div className="refresh-controls">
             <button
@@ -500,7 +518,14 @@ export const DashboardPage: React.FC = () => {
               onClick={() => fetchIncidents(true)}
               disabled={refreshing}
             >
-              {refreshing ? 'Refreshing...' : '↻ Refresh'}
+              {refreshing ? (
+                <>
+                  <span className="dashboard-spinner" aria-hidden="true" />
+                  Refreshing...
+                </>
+              ) : (
+                '↻ Refresh'
+              )}
             </button>
           </div>
         </div>
@@ -508,7 +533,10 @@ export const DashboardPage: React.FC = () => {
 
       <div className="incidents-grid">
         {loading ? (
-          <div className="loading">Loading incidents...</div>
+          <div className="loading">
+            <span className="dashboard-spinner" aria-hidden="true" />
+            Loading incidents...
+          </div>
         ) : filteredIncidents.length === 0 ? (
           <div className="no-incidents">
             <h2>✅ No incidents in this category!</h2>

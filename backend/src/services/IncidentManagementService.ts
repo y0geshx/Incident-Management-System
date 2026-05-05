@@ -21,6 +21,10 @@ import {
 } from "../patterns/AlertStrategy";
 import { WorkItemStateContext } from "../patterns/StatePattern";
 import { Logger } from "../utils/Logger";
+import {
+  NoopRealtimeBroadcaster,
+  RealtimeBroadcaster,
+} from "../realtime/ApiChangeBroadcaster";
 
 export class IncidentManagementService {
   private logger: Logger;
@@ -29,10 +33,26 @@ export class IncidentManagementService {
 
   constructor(
     private sourceOfTruthStore: SourceOfTruthStore,
-    private cacheStore: CacheStore
+    private cacheStore: CacheStore,
+    private realtimeBroadcaster: RealtimeBroadcaster = new NoopRealtimeBroadcaster()
   ) {
     this.logger = new Logger("info");
     this.stateContext = new WorkItemStateContext();
+  }
+
+  private emitChange(
+    action: "created" | "updated",
+    workItemId: string,
+    message: string
+  ): void {
+    void this.realtimeBroadcaster.broadcast({
+      type: "api-change",
+      resource: "incident",
+      action,
+      resourceId: workItemId,
+      timestamp: new Date().toISOString(),
+      message,
+    });
   }
 
   async transitionWorkItemState(
@@ -64,6 +84,12 @@ export class IncidentManagementService {
 
     // Clear cache
     await this.cacheStore.deleteWorkItem(workItemId);
+
+    this.emitChange(
+      "updated",
+      workItemId,
+      `Work item ${workItemId} transitioned to ${newState}`
+    );
 
     this.logger.info(`Work item ${workItemId} transitioned to ${newState}`);
   }
@@ -111,6 +137,12 @@ export class IncidentManagementService {
 
     // Store RCA
     await this.sourceOfTruthStore.storeRCA(rcaRecord);
+
+    this.emitChange(
+      "updated",
+      workItemId,
+      `RCA submitted for work item ${workItemId}`
+    );
 
     this.logger.info(
       `RCA submitted for work item ${workItemId}, MTTR: ${mttr}s`
@@ -205,6 +237,13 @@ export class IncidentManagementService {
 
     await this.sourceOfTruthStore.createWorkItem(workItem);
     await this.cacheStore.setWorkItem(workItem, 300);
+
+    this.emitChange(
+      "created",
+      workItem.id,
+      `Incident created for ${workItem.componentId}`
+    );
+
     return workItem;
   }
 

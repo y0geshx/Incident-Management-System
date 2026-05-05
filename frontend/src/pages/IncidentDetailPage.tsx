@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import '../styles/IncidentDetailPage.css';
 import { RCAForm } from '../components/RCAForm';
 import { SignalsList } from '../components/SignalsList';
 import { apiClient, getApiErrorMessage } from '../services/apiClient';
 import { WorkItem, Signal, IncidentStatus, RCAInput } from '../types';
+import { useRealtimeUpdates } from '../hooks/useRealtimeUpdates';
 
 export const IncidentDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -38,6 +39,21 @@ export const IncidentDetailPage: React.FC = () => {
       fetchIncidentSignals();
     }
   }, [id]);
+
+  // Setup realtime updates via WebSocket
+  const handleIncidentUpdate = useCallback(
+    (resourceId?: string) => {
+      if (resourceId === id || !resourceId) {
+        void fetchIncidentDetail();
+      }
+    },
+    [id]
+  );
+
+  useRealtimeUpdates({
+    onIncidentUpdated: handleIncidentUpdate,
+    enabled: !!id,
+  });
 
   const fetchIncidentDetail = async () => {
     try {
@@ -407,7 +423,14 @@ export const IncidentDetailPage: React.FC = () => {
                     disabled={statusTransitioning}
                     className="btn-action primary"
                   >
-                      {statusTransitioning ? '⏳ Starting...' : '🔍 Start Investigation'}
+                      {statusTransitioning ? (
+                        <>
+                          <span className="status-spinner" aria-hidden="true" />
+                          Starting...
+                        </>
+                      ) : (
+                        '🔍 Start Investigation'
+                      )}
                   </button>
                 )}
                 {incident.status === 'INVESTIGATING' && (
@@ -417,14 +440,28 @@ export const IncidentDetailPage: React.FC = () => {
                       disabled={statusTransitioning}
                       className="btn-action success"
                     >
-                        {statusTransitioning ? '⏳ Resolving...' : '✅ Mark as Resolved'}
+                        {statusTransitioning ? (
+                          <>
+                            <span className="status-spinner" aria-hidden="true" />
+                            Resolving...
+                          </>
+                        ) : (
+                          '✅ Mark as Resolved'
+                        )}
                     </button>
                     <button
                       onClick={() => handleStatusChange('OPEN')}
                       disabled={statusTransitioning}
                       className="btn-action secondary"
                     >
-                        {statusTransitioning ? '⏳ Reopening...' : '🔄 Reopen'}
+                        {statusTransitioning ? (
+                          <>
+                            <span className="status-spinner" aria-hidden="true" />
+                            Reopening...
+                          </>
+                        ) : (
+                          '🔄 Reopen'
+                        )}
                     </button>
                   </>
                 )}

@@ -109,6 +109,23 @@
   border-color: #5a67d8;
 }
 
+.status-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: statusSpin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes statusSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .incident-title-section {
   display: flex;
   flex-direction: column;

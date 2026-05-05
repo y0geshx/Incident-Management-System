@@ -4,6 +4,7 @@
 
 import "dotenv/config";
 import path from "path";
+import http from "http";
 import express, { Express } from "express";
 import cors from "cors";
 import { DataLakeStore } from "./storage/DataLakeStore";
@@ -16,6 +17,7 @@ import { createSignalRoutes } from "./routes/signals";
 import { createHealthRoutes } from "./routes/health";
 import { createSwaggerUiHtml, openApiDocument } from "./openapi";
 import { Logger } from "./utils/Logger";
+import { ApiChangeBroadcaster } from "./realtime/ApiChangeBroadcaster";
 
 class IMSApplication {
   private app: Express;
@@ -25,21 +27,26 @@ class IMSApplication {
   private cacheStore: CacheStore;
   private signalService: SignalProcessingService;
   private incidentService: IncidentManagementService;
+  private realtimeBroadcaster: ApiChangeBroadcaster;
+  private server?: http.Server;
 
   constructor() {
     this.app = express();
     this.logger = new Logger("info");
+    this.realtimeBroadcaster = new ApiChangeBroadcaster();
     this.dataLakeStore = new DataLakeStore();
     this.sourceOfTruthStore = new SourceOfTruthStore();
     this.cacheStore = new CacheStore();
     this.signalService = new SignalProcessingService(
       this.dataLakeStore,
       this.sourceOfTruthStore,
-      this.cacheStore
+      this.cacheStore,
+      this.realtimeBroadcaster
     );
     this.incidentService = new IncidentManagementService(
       this.sourceOfTruthStore,
-      this.cacheStore
+      this.cacheStore,
+      this.realtimeBroadcaster
     );
   }
 
@@ -119,9 +126,11 @@ class IMSApplication {
       this.setupRoutes();
 
       const PORT = parseInt(process.env.PORT || "3001", 10);
-      this.app.listen(PORT, () => {
+      this.server = this.app.listen(PORT, () => {
+        this.realtimeBroadcaster.attach(this.server as http.Server);
         this.logger.info(`🎯 IMS Server running on http://localhost:${PORT}`);
         this.logger.info(`📊 Health check: http://localhost:${PORT}/api/health`);
+        this.logger.info(`🔌 WebSocket updates: ws://localhost:${PORT}/api/ws`);
         this.logger.info(`🎬 Ready to process signals!`);
       });
     } catch (error) {
@@ -132,6 +141,10 @@ class IMSApplication {
 
   async shutdown(): Promise<void> {
     this.logger.info("Shutting down...");
+    await this.realtimeBroadcaster.close();
+    if (this.server) {
+      await new Promise<void>((resolve) => this.server?.close(() => resolve()));
+    }
     await this.dataLakeStore.disconnect();
     await this.cacheStore.disconnect();
     await this.sourceOfTruthStore.disconnect();

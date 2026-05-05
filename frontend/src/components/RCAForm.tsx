@@ -19,6 +19,7 @@ export const RCAForm: React.FC<RCAFormProps> = ({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const isSubmitting = submitting || isLoading;
 
   const categories = [
     'Database Failure',
@@ -155,9 +156,16 @@ export const RCAForm: React.FC<RCAFormProps> = ({
       <button
         type="submit"
         className="submit-btn"
-        disabled={submitting || isLoading}
+        disabled={isSubmitting}
       >
-        {submitting ? 'Submitting...' : '✓ Submit RCA & Close Incident'}
+        {isSubmitting ? (
+          <>
+            <span className="form-spinner" aria-hidden="true" />
+            Submitting...
+          </>
+        ) : (
+          '✓ Submit RCA & Close Incident'
+        )}
       </button>
     </form>
   );

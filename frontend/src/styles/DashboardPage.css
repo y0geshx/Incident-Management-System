@@ -675,6 +675,33 @@
   font-weight: 500;
 }
 
+.updating-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #4f46e5;
+  background: #eef2ff;
+  border-color: #c7d2fe;
+  font-weight: 700;
+}
+
+.dashboard-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(79, 70, 229, 0.2);
+  border-top-color: #4f46e5;
+  border-radius: 50%;
+  animation: dashboardSpin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes dashboardSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .dashboard-controls-footer {
   display: flex;
   justify-content: space-between;
@@ -775,4 +802,8 @@
   border-radius: 16px;
   color: #6b7280;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
 }

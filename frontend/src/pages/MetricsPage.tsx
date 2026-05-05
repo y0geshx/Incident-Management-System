@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/MetricsPage.css';
 import { apiClient, getApiErrorMessage } from '../services/apiClient';
 import { WorkItem } from '../types';
 import { format, parseISO, startOfDay, subDays, eachDayOfInterval, differenceInHours } from 'date-fns';
+import { useRealtimeUpdates } from '../hooks/useRealtimeUpdates';
 
 const severityLevels = ['P0', 'P1', 'P2', 'P3'] as const;
 
@@ -140,6 +141,17 @@ export const MetricsPage: React.FC = () => {
   useEffect(() => {
     fetchIncidents();
   }, []);
+
+  // Setup realtime updates via WebSocket
+  const handleIncidentChange = useCallback(() => {
+    void fetchIncidents(true);
+  }, []);
+
+  useRealtimeUpdates({
+    onIncidentCreated: handleIncidentChange,
+    onIncidentUpdated: handleIncidentChange,
+    enabled: true,
+  });
 
   return (
     <div className="metrics-page">

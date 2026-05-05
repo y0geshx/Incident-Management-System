@@ -10,6 +10,10 @@ import { SourceOfTruthStore } from "../storage/SourceOfTruthStore";
 import { CacheStore } from "../storage/CacheStore";
 import { SignalDebouncer } from "../utils/SignalDebouncer";
 import { Logger } from "../utils/Logger";
+import {
+  NoopRealtimeBroadcaster,
+  RealtimeBroadcaster,
+} from "../realtime/ApiChangeBroadcaster";
 
 export class SignalProcessingService {
   private logger: Logger;
@@ -22,6 +26,7 @@ export class SignalProcessingService {
     private dataLakeStore: DataLakeStore,
     private sourceOfTruthStore: SourceOfTruthStore,
     private cacheStore: CacheStore,
+    private realtimeBroadcaster: RealtimeBroadcaster = new NoopRealtimeBroadcaster(),
     debounceWindowMs: number = 10000
   ) {
     this.logger = new Logger("info");
@@ -144,6 +149,15 @@ export class SignalProcessingService {
 
         await this.sourceOfTruthStore.createWorkItem(workItem);
         this.logger.info(`Created new work item: ${workItem.id}`);
+
+        void this.realtimeBroadcaster.broadcast({
+          type: "api-change",
+          resource: "incident",
+          action: "created",
+          resourceId: workItem.id,
+          timestamp: new Date().toISOString(),
+          message: `Incident created for ${componentId} after debounce flush`,
+        });
       } else {
         // Update existing work item
         workItem.signalIds = [...new Set([...workItem.signalIds, ...signalIds])];
@@ -153,6 +167,15 @@ export class SignalProcessingService {
 
         await this.sourceOfTruthStore.updateWorkItem(workItem);
         this.logger.info(`Updated work item: ${workItem.id}`);
+
+        void this.realtimeBroadcaster.broadcast({
+          type: "api-change",
+          resource: "incident",
+          action: "updated",
+          resourceId: workItem.id,
+          timestamp: new Date().toISOString(),
+          message: `Incident updated for ${componentId} after debounce flush`,
+        });
       }
 
       // Cache the work item
