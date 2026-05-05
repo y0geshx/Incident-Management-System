@@ -13,7 +13,7 @@ This is the fastest way to get the system running with all dependencies.
 
 ```bash
 # Clone/navigate to project
-cd imgassig
+cd Incident-Management-System
 
 # Create environment file
 cp backend/.env.example backend/.env
@@ -43,7 +43,7 @@ For active development with hot-reload:
 
 ```bash
 # Terminal 1: Start databases
-cd imgassig
+cd Incident-Management-System
 docker-compose up postgres mongodb redis
 
 # Terminal 2: Backend

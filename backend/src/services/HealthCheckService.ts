@@ -61,7 +61,7 @@ export class HealthCheckService {
 
     let systemStatus: "operational" | "degraded" | "down" = "operational";
     if (unhealthyCount > 0) {
-      systemStatus = unhealthyCount > services.length / 2 ? "down" : "degraded";
+      systemStatus = unhealthyCount >= services.length / 2 ? "down" : "degraded";
     } else if (degradedCount > 0) {
       systemStatus = "degraded";
     }

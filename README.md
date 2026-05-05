@@ -103,7 +103,7 @@ flowchart TB
 
 ```bash
 # Clone or navigate to project
-cd imgassig
+cd Incident-Management-System
 
 # Start all services
 docker-compose up --build -d
@@ -345,10 +345,21 @@ Tests cover:
 
 ### Integration Tests (Sample Data)
 ```bash
+cd backend
 npm run generate-sample-data
 # Sends 8 signals simulating RDBMS failure → cascading issues
 ```
 
+### Run Health Check Tests:
+```bash
+cd backend
+npm test -- health-check.test.ts
+```
+### Run openAPI Tests:
+```bash
+cd backend
+npm test -- openapi.test.ts
+```
 ### Load Testing
 ```bash
 # Coming soon: k6 load test script
