@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import '../styles/DashboardPage.css';
 import { IncidentCard } from '../components/IncidentCard';
 import { apiClient, getApiErrorMessage } from '../services/apiClient';
@@ -14,6 +14,7 @@ interface SystemStatus {
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [incidents, setIncidents] = useState<WorkItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -27,6 +28,9 @@ export const DashboardPage: React.FC = () => {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
+  const [showStatusFilters, setShowStatusFilters] = useState(false);
+  const [showSeverityFilters, setShowSeverityFilters] = useState(false);
+  const [showComponentFilters, setShowComponentFilters] = useState(false);
 
   useEffect(() => {
     fetchIncidents();
@@ -161,6 +165,38 @@ export const DashboardPage: React.FC = () => {
     setSearchQuery(e.target.value);
   };
 
+  const clearSearch = () => {
+    setSearchQuery('');
+    searchInputRef.current?.focus();
+  };
+
+  useEffect(() => {
+    const handleGlobalKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const isTypingTarget =
+        target?.tagName === 'INPUT' ||
+        target?.tagName === 'TEXTAREA' ||
+        target?.isContentEditable;
+
+      if (event.key === '/' && !isTypingTarget) {
+        event.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+      }
+
+      if (event.key === 'Escape' && document.activeElement === searchInputRef.current) {
+        if (searchQuery) {
+          setSearchQuery('');
+        } else {
+          searchInputRef.current?.blur();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [searchQuery]);
+
   const handleOpenSwaggerDocs = () => {
     window.open('/api/docs', '_blank', 'noopener,noreferrer');
   };
@@ -187,7 +223,7 @@ export const DashboardPage: React.FC = () => {
           </div>
           <div className="dashboard-header-actions">
             <button className="api-docs-btn" onClick={() => navigate('/incident/new')}>
-              New Incident
+              ➕ New Incident
             </button>
             <button
               className="api-docs-btn"
@@ -195,7 +231,7 @@ export const DashboardPage: React.FC = () => {
               disabled={emittingRandomSignal}
               title="Generate and ingest a random signal"
             >
-              {emittingRandomSignal ? 'Emitting...' : 'Emit Random Signal'}
+              ⚡ {emittingRandomSignal ? 'Emitting...' : 'Emit Random Signal'}
             </button>
             <button
               className="api-docs-btn"
@@ -203,23 +239,23 @@ export const DashboardPage: React.FC = () => {
               disabled={simulatingCascadingFailure}
               title="Simulate a cascading failure scenario with multiple signals"
             >
-              {simulatingCascadingFailure ? 'Simulating...' : 'Simulate Cascading Failure'}
+              📋 {simulatingCascadingFailure ? 'Simulating...' : 'Simulate Cascading Failure'}
             </button>
             <button className="api-docs-btn" onClick={() => navigate('/metrics')}>
-              Metrics Dashboard
+              📊 Metrics Dashboard
             </button>
             <button className="api-docs-btn" onClick={() => navigate('/service-status')}>
-              Service Status
+              🖥️ Service Status
             </button>
             <button className="api-docs-btn" onClick={() => navigate('/api-docs')}>
-              API Docs
+              📖 API Docs
             </button>
             <button
               className="api-docs-btn"
               onClick={handleOpenSwaggerDocs}
               title="Open interactive Swagger UI"
             >
-              Swagger UI
+              🔗 Swagger UI
             </button>
           </div>
         </div>
@@ -251,141 +287,222 @@ export const DashboardPage: React.FC = () => {
 
       <div className="dashboard-controls">
         <div className="search-bar-container">
-          <input
-            type="text"
-            placeholder="Search by incident title or ID..."
-            value={searchQuery}
-            onChange={handleSearchChange}
-            className="search-input"
-          />
+          <div className="search-bar-header">
+            <span className="search-bar-label">Search incidents</span>
+            <span className="search-shortcut">Press / to focus</span>
+          </div>
+          <div className="search-wrapper">
+            <span className="search-icon">🔍</span>
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search by incident title or ID..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="search-input"
+              aria-label="Search incidents by title or ID"
+              aria-describedby="dashboard-search-help"
+              autoComplete="off"
+              spellCheck={false}
+            />
+            {searchQuery && (
+              <button
+                className="search-clear-btn"
+                onClick={clearSearch}
+                title="Clear search"
+                aria-label="Clear search"
+              >
+                ✕
+              </button>
+            )}
+            <span className="search-results-count" aria-live="polite">
+              {searchQuery ? filteredIncidents.length : incidents.length}
+            </span>
+          </div>
+          <div className="search-meta" id="dashboard-search-help">
+            <span>
+              {searchQuery
+                ? `Showing ${filteredIncidents.length} of ${incidents.length} incidents`
+                : `Search across ${incidents.length} incidents`}
+            </span>
+            <span>{searchQuery ? 'Esc clears search' : 'Type to filter the live feed'}</span>
+          </div>
         </div>
-        <div className="filter-buttons">
-          <button
-            className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
-            onClick={() => handleFilterChange('all')}
-          >
-            All ({incidents.length})
-          </button>
-          <button
-            className={`filter-btn ${filter === 'OPEN' ? 'active' : ''}`}
-            onClick={() => handleFilterChange('OPEN')}
-          >
-            Open ({incidents.filter((i) => i.status === 'OPEN').length})
-          </button>
-          <button
-            className={`filter-btn ${filter === 'INVESTIGATING' ? 'active' : ''}`}
-            onClick={() => handleFilterChange('INVESTIGATING')}
-          >
-            Investigating ({incidents.filter((i) => i.status === 'INVESTIGATING').length})
-          </button>
-          <button
-            className={`filter-btn ${filter === 'RESOLVED' ? 'active' : ''}`}
-            onClick={() => handleFilterChange('RESOLVED')}
-          >
-            Resolved ({incidents.filter((i) => i.status === 'RESOLVED').length})
-          </button>
-          <button
-            className={`filter-btn ${filter === 'CLOSED' ? 'active' : ''}`}
-            onClick={() => handleFilterChange('CLOSED')}
-          >
-            Closed ({incidents.filter((i) => i.status === 'CLOSED').length})
-          </button>
+
+        <div className="filter-section">
+          <div className="filter-section-header">
+            <div className="filter-section-label">Status</div>
+            <button
+              type="button"
+              className="filter-toggle-btn"
+              onClick={() => setShowStatusFilters((current) => !current)}
+              aria-expanded={showStatusFilters}
+              aria-controls="status-filter-buttons"
+            >
+              {showStatusFilters ? 'Hide' : 'Show'}
+            </button>
+          </div>
+          <div id="status-filter-buttons" className={`filter-buttons ${showStatusFilters ? '' : 'is-hidden'}`}>
+            <button
+              className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
+              onClick={() => handleFilterChange('all')}
+            >
+              All ({incidents.length})
+            </button>
+            <button
+              className={`filter-btn ${filter === 'OPEN' ? 'active' : ''}`}
+              onClick={() => handleFilterChange('OPEN')}
+            >
+              Open ({incidents.filter((i) => i.status === 'OPEN').length})
+            </button>
+            <button
+              className={`filter-btn ${filter === 'INVESTIGATING' ? 'active' : ''}`}
+              onClick={() => handleFilterChange('INVESTIGATING')}
+            >
+              Investigating ({incidents.filter((i) => i.status === 'INVESTIGATING').length})
+            </button>
+            <button
+              className={`filter-btn ${filter === 'RESOLVED' ? 'active' : ''}`}
+              onClick={() => handleFilterChange('RESOLVED')}
+            >
+              Resolved ({incidents.filter((i) => i.status === 'RESOLVED').length})
+            </button>
+            <button
+              className={`filter-btn ${filter === 'CLOSED' ? 'active' : ''}`}
+              onClick={() => handleFilterChange('CLOSED')}
+            >
+              Closed ({incidents.filter((i) => i.status === 'CLOSED').length})
+            </button>
+          </div>
         </div>
-        <div className="filter-buttons severity-filters">
-          <button
-            className={`filter-btn ${severityFilter === 'all' ? 'active' : ''}`}
-            onClick={() => handleSeverityChange('all')}
-          >
-            All Severities
-          </button>
-          <button
-            className={`filter-btn ${severityFilter === 'P0' ? 'active' : ''}`}
-            onClick={() => handleSeverityChange('P0')}
-          >
-            P0
-          </button>
-          <button
-            className={`filter-btn ${severityFilter === 'P1' ? 'active' : ''}`}
-            onClick={() => handleSeverityChange('P1')}
-          >
-            P1
-          </button>
-          <button
-            className={`filter-btn ${severityFilter === 'P2' ? 'active' : ''}`}
-            onClick={() => handleSeverityChange('P2')}
-          >
-            P2
-          </button>
-          <button
-            className={`filter-btn ${severityFilter === 'P3' ? 'active' : ''}`}
-            onClick={() => handleSeverityChange('P3')}
-          >
-            P3
-          </button>
+
+        <div className="filter-section">
+          <div className="filter-section-header">
+            <div className="filter-section-label">Severity</div>
+            <button
+              type="button"
+              className="filter-toggle-btn"
+              onClick={() => setShowSeverityFilters((current) => !current)}
+              aria-expanded={showSeverityFilters}
+              aria-controls="severity-filter-buttons"
+            >
+              {showSeverityFilters ? 'Hide' : 'Show'}
+            </button>
+          </div>
+          <div id="severity-filter-buttons" className={`filter-buttons severity-filters ${showSeverityFilters ? '' : 'is-hidden'}`}>
+            <button
+              className={`filter-btn ${severityFilter === 'all' ? 'active' : ''}`}
+              onClick={() => handleSeverityChange('all')}
+            >
+              All Severities
+            </button>
+            <button
+              className={`filter-btn ${severityFilter === 'P0' ? 'active' : ''}`}
+              onClick={() => handleSeverityChange('P0')}
+            >
+              P0
+            </button>
+            <button
+              className={`filter-btn ${severityFilter === 'P1' ? 'active' : ''}`}
+              onClick={() => handleSeverityChange('P1')}
+            >
+              P1
+            </button>
+            <button
+              className={`filter-btn ${severityFilter === 'P2' ? 'active' : ''}`}
+              onClick={() => handleSeverityChange('P2')}
+            >
+              P2
+            </button>
+            <button
+              className={`filter-btn ${severityFilter === 'P3' ? 'active' : ''}`}
+              onClick={() => handleSeverityChange('P3')}
+            >
+              P3
+            </button>
+          </div>
         </div>
-        <div className="filter-buttons component-filters">
-          <button
-            className={`filter-btn ${tagFilter === 'all' ? 'active' : ''}`}
-            onClick={() => handleTagChange('all')}
-          >
-            All Components
-          </button>
-          <button
-            className={`filter-btn ${tagFilter === 'API' ? 'active' : ''}`}
-            onClick={() => handleTagChange('API')}
-          >
-            API
-          </button>
-          <button
-            className={`filter-btn ${tagFilter === 'RDBMS' ? 'active' : ''}`}
-            onClick={() => handleTagChange('RDBMS')}
-          >
-            RDBMS
-          </button>
-          <button
-            className={`filter-btn ${tagFilter === 'CACHE_CLUSTER' ? 'active' : ''}`}
-            onClick={() => handleTagChange('CACHE_CLUSTER')}
-          >
-            Cache
-          </button>
-          <button
-            className={`filter-btn ${tagFilter === 'ASYNC_QUEUE' ? 'active' : ''}`}
-            onClick={() => handleTagChange('ASYNC_QUEUE')}
-          >
-            Queue
-          </button>
-          <button
-            className={`filter-btn ${tagFilter === 'NOSQL_STORE' ? 'active' : ''}`}
-            onClick={() => handleTagChange('NOSQL_STORE')}
-          >
-            NoSQL
-          </button>
-          <button
-            className={`filter-btn ${tagFilter === 'MCP_HOST' ? 'active' : ''}`}
-            onClick={() => handleTagChange('MCP_HOST')}
-          >
-            MCP Host
-          </button>
+
+        <div className="filter-section">
+          <div className="filter-section-header">
+            <div className="filter-section-label">Component</div>
+            <button
+              type="button"
+              className="filter-toggle-btn"
+              onClick={() => setShowComponentFilters((current) => !current)}
+              aria-expanded={showComponentFilters}
+              aria-controls="component-filter-buttons"
+            >
+              {showComponentFilters ? 'Hide' : 'Show'}
+            </button>
+          </div>
+          <div id="component-filter-buttons" className={`filter-buttons component-filters ${showComponentFilters ? '' : 'is-hidden'}`}>
+            <button
+              className={`filter-btn ${tagFilter === 'all' ? 'active' : ''}`}
+              onClick={() => handleTagChange('all')}
+            >
+              All Components
+            </button>
+            <button
+              className={`filter-btn ${tagFilter === 'API' ? 'active' : ''}`}
+              onClick={() => handleTagChange('API')}
+            >
+              API
+            </button>
+            <button
+              className={`filter-btn ${tagFilter === 'RDBMS' ? 'active' : ''}`}
+              onClick={() => handleTagChange('RDBMS')}
+            >
+              RDBMS
+            </button>
+            <button
+              className={`filter-btn ${tagFilter === 'CACHE_CLUSTER' ? 'active' : ''}`}
+              onClick={() => handleTagChange('CACHE_CLUSTER')}
+            >
+              Cache
+            </button>
+            <button
+              className={`filter-btn ${tagFilter === 'ASYNC_QUEUE' ? 'active' : ''}`}
+              onClick={() => handleTagChange('ASYNC_QUEUE')}
+            >
+              Queue
+            </button>
+            <button
+              className={`filter-btn ${tagFilter === 'NOSQL_STORE' ? 'active' : ''}`}
+              onClick={() => handleTagChange('NOSQL_STORE')}
+            >
+              NoSQL
+            </button>
+            <button
+              className={`filter-btn ${tagFilter === 'MCP_HOST' ? 'active' : ''}`}
+              onClick={() => handleTagChange('MCP_HOST')}
+            >
+              MCP Host
+            </button>
+          </div>
         </div>
-        <div className="refresh-info">
-          <span>Dashboard updated at {lastUpdated}</span>
-          <span>Auto-refresh {autoRefresh ? 'enabled' : 'disabled'}</span>
-        </div>
-        <div className="refresh-controls">
-          <button
-            className={`auto-refresh-btn ${autoRefresh ? 'active' : ''}`}
-            onClick={handleAutoRefreshToggle}
-            title={autoRefresh ? 'Disable auto-refresh' : 'Enable auto-refresh'}
-          >
-            {autoRefresh ? '⏸ Auto On' : '▶ Auto Off'}
-          </button>
-          <button
-            className="refresh-btn"
-            onClick={() => fetchIncidents(true)}
-            disabled={refreshing}
-          >
-            {refreshing ? 'Refreshing...' : '↻ Refresh'}
-          </button>
+
+        <div className="dashboard-controls-footer">
+          <div className="refresh-info">
+            <span>Dashboard updated at {lastUpdated}</span>
+            <span>Auto-refresh {autoRefresh ? 'enabled' : 'disabled'}</span>
+          </div>
+          <div className="refresh-controls">
+            <button
+              className={`auto-refresh-btn ${autoRefresh ? 'active' : ''}`}
+              onClick={handleAutoRefreshToggle}
+              title={autoRefresh ? 'Disable auto-refresh' : 'Enable auto-refresh'}
+            >
+              {autoRefresh ? '⏸ Auto On' : '▶ Auto Off'}
+            </button>
+            <button
+              className="refresh-btn"
+              onClick={() => fetchIncidents(true)}
+              disabled={refreshing}
+            >
+              {refreshing ? 'Refreshing...' : '↻ Refresh'}
+            </button>
+          </div>
         </div>
       </div>
 

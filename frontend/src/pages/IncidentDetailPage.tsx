@@ -183,7 +183,7 @@ export const IncidentDetailPage: React.FC = () => {
       <header className="incident-detail-header">
         <div className="header-left">
           <button className="back-btn" onClick={() => navigate(getBackToDashboardPath())}>
-            ← Back to Dashboard
+              ← Back to Dashboard
           </button>
         </div>
 
@@ -231,26 +231,26 @@ export const IncidentDetailPage: React.FC = () => {
           className={`tab ${activeTab === 'overview' ? 'active' : ''}`}
           onClick={() => setActiveTab('overview')}
         >
-          📊 Overview
+            📊 Overview
         </button>
         <button
           className={`tab ${activeTab === 'signals' ? 'active' : ''}`}
           onClick={() => setActiveTab('signals')}
         >
-          📡 Signals ({incident.signalCount})
+            📡 Signals ({incident.signalCount})
         </button>
         <button
           className={`tab ${activeTab === 'timeline' ? 'active' : ''}`}
           onClick={() => setActiveTab('timeline')}
         >
-          ⏱️ Timeline
+            ⏱️ Timeline
         </button>
         {canSubmitRCA && (
           <button
             className={`tab ${activeTab === 'rca' ? 'active' : ''}`}
             onClick={() => setActiveTab('rca')}
           >
-            🔍 RCA Form
+              🔍 RCA Form
           </button>
         )}
       </div>
@@ -407,7 +407,7 @@ export const IncidentDetailPage: React.FC = () => {
                     disabled={statusTransitioning}
                     className="btn-action primary"
                   >
-                    {statusTransitioning ? '⏳ Starting...' : '🔍 Start Investigation'}
+                      {statusTransitioning ? '⏳ Starting...' : '🔍 Start Investigation'}
                   </button>
                 )}
                 {incident.status === 'INVESTIGATING' && (
@@ -417,14 +417,14 @@ export const IncidentDetailPage: React.FC = () => {
                       disabled={statusTransitioning}
                       className="btn-action success"
                     >
-                      {statusTransitioning ? '⏳ Resolving...' : '✅ Mark as Resolved'}
+                        {statusTransitioning ? '⏳ Resolving...' : '✅ Mark as Resolved'}
                     </button>
                     <button
                       onClick={() => handleStatusChange('OPEN')}
                       disabled={statusTransitioning}
                       className="btn-action secondary"
                     >
-                      {statusTransitioning ? '⏳ Reopening...' : '🔄 Reopen'}
+                        {statusTransitioning ? '⏳ Reopening...' : '🔄 Reopen'}
                     </button>
                   </>
                 )}

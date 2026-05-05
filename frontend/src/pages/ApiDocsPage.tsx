@@ -49,10 +49,10 @@ export const ApiDocsPage: React.FC = () => {
       <header className="api-docs-header">
         <div className="api-docs-header-actions">
           <button className="api-docs-back-btn" onClick={() => navigate('/')}>
-            Back to Dashboard
+            ← Back to Dashboard
           </button>
           <button className="api-docs-swagger-btn" onClick={handleOpenSwaggerDocs}>
-            Open Swagger UI
+            🔗 Open Swagger UI
           </button>
         </div>
         <h1>API Documentation</h1>

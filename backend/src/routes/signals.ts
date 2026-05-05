@@ -141,11 +141,17 @@ export function createSignalRoutes(
   /**
    * POST /api/signals/cascading-failure
    * Simulate a cascading failure scenario with multiple signals
+   * 
+   * Cascade Pattern:
+   * RDBMS Failure (root) → API Gateway (downstream) → Cache/Queue/NoSQL (secondary impacts)
    */
   router.post("/signals/cascading-failure", async (_req: Request, res: Response) => {
     try {
+      const cascadeId = uuidv4(); // Correlation ID for entire cascade
+      const cascadeTimestamp = new Date();
+
       const cascadingSignals: SignalPayload[] = [
-        // RDBMS Failure - P0 Critical
+        // RDBMS Failure - P0 Critical (ROOT CAUSE)
         {
           componentId: "RDBMS_CLUSTER_01",
           componentType: ComponentType.RDBMS,
@@ -156,11 +162,15 @@ export function createSignalRoutes(
             poolSize: 100,
             activeConnections: 100,
             waitingRequests: 5432,
+            cascadeId, // Add cascade correlation
+            cascadeRole: "root_cause",
+            cascadeLevel: 0,
+            timestamp: cascadeTimestamp.toISOString(),
           },
           stackTrace: `Error: Connection timeout\n    at DatabasePool.getConnection (db/pool.ts:45:12)\n    at Query.execute (db/query.ts:78:9)`,
           latency: 30000,
         },
-        // Cascading API failures
+        // Cascading API failures - P1 (SECONDARY - depends on RDBMS)
         {
           componentId: "API_GATEWAY_01",
           componentType: ComponentType.API,
@@ -171,10 +181,15 @@ export function createSignalRoutes(
             downstreamService: "RDBMS_CLUSTER_01",
             errorRate: 0.95,
             averageLatency: 25000,
+            cascadeId, // Link to cascade
+            cascadeRole: "impacted_service",
+            cascadeLevel: 1,
+            dependsOn: ["RDBMS_CLUSTER_01"],
+            timestamp: cascadeTimestamp.toISOString(),
           },
           latency: 25000,
         },
-        // Cache cluster degradation
+        // Cache cluster degradation - P2 (TERTIARY - secondary impact)
         {
           componentId: "CACHE_CLUSTER_01",
           componentType: ComponentType.CACHE_CLUSTER,
@@ -185,9 +200,14 @@ export function createSignalRoutes(
             memoryUsagePercent: 92,
             evictionRate: 1200,
             hitRate: 0.45,
+            cascadeId,
+            cascadeRole: "secondary_impact",
+            cascadeLevel: 2,
+            dependsOn: ["API_GATEWAY_01"],
+            timestamp: cascadeTimestamp.toISOString(),
           },
         },
-        // Async Queue backed up
+        // Async Queue backed up - P1 (TERTIARY - secondary impact)
         {
           componentId: "ASYNC_QUEUE_01",
           componentType: ComponentType.ASYNC_QUEUE,
@@ -198,9 +218,14 @@ export function createSignalRoutes(
             pendingJobs: 50000,
             processingRate: 100,
             estimatedClearTime: "8 hours",
+            cascadeId,
+            cascadeRole: "secondary_impact",
+            cascadeLevel: 2,
+            dependsOn: ["API_GATEWAY_01", "RDBMS_CLUSTER_01"],
+            timestamp: cascadeTimestamp.toISOString(),
           },
         },
-        // MCP Host failure
+        // MCP Host failure - P0 (INDEPENDENT)
         {
           componentId: "MCP_HOST_02",
           componentType: ComponentType.MCP_HOST,
@@ -211,10 +236,14 @@ export function createSignalRoutes(
             healthCheckAttempts: 5,
             lastSuccessfulCheck: "2024-01-15T10:25:00Z",
             failureReason: "Connection refused",
+            cascadeId,
+            cascadeRole: "parallel_incident",
+            cascadeLevel: 0,
+            timestamp: cascadeTimestamp.toISOString(),
           },
           stackTrace: `Error: connect ECONNREFUSED 192.168.1.52:8080\n    at TCPConnectWrap.afterConnect [as oncomplete] (net.js:1141:15)`,
         },
-        // NoSQL store replication lag
+        // NoSQL store replication lag - P2 (TERTIARY - secondary impact)
         {
           componentId: "NOSQL_STORE_01",
           componentType: ComponentType.NOSQL_STORE,
@@ -225,6 +254,11 @@ export function createSignalRoutes(
             replicationLagMs: 5000,
             primaryWriteRate: 5000,
             secondaryReadLag: 5200,
+            cascadeId,
+            cascadeRole: "secondary_impact",
+            cascadeLevel: 2,
+            dependsOn: ["RDBMS_CLUSTER_01"],
+            timestamp: cascadeTimestamp.toISOString(),
           },
         },
       ];
@@ -236,7 +270,7 @@ export function createSignalRoutes(
         errorCode: payload.errorCode,
         errorMessage: payload.errorMessage,
         severity: payload.severity || Severity.P3,
-        timestamp: new Date(),
+        timestamp: cascadeTimestamp,
         metadata: payload.metadata || {},
         stackTrace: payload.stackTrace,
         latency: payload.latency,
@@ -249,6 +283,82 @@ export function createSignalRoutes(
       res.status(202).json({
         message: "Cascading failure signals accepted for processing",
         count: signals.length,
+        cascadeId,
+        cascadeStructure: {
+          rootCause: "RDBMS_CLUSTER_01 (connection pool exhausted)",
+          directImpact: ["API_GATEWAY_01"],
+          secondaryImpacts: ["CACHE_CLUSTER_01", "ASYNC_QUEUE_01", "NOSQL_STORE_01"],
+          parallelIncidents: ["MCP_HOST_02"],
+          estimatedMTTR: "30-60 minutes (depending on RDBMS recovery)",
+        },
+      });
+    } catch (error) {
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  });
+
+  /**
+   * GET /api/signals/cascade-analysis
+   * Analyze and detect cascade patterns in recent signals
+   * Helps identify when cascading failures have occurred
+   */
+  router.get("/signals/cascade-analysis", async (_req: Request, res: Response) => {
+    try {
+      // Get all work items to analyze cascade relationships
+      const allWorkItems = await incidentService.getAllIncidents();
+
+      // Group incidents by cascade patterns
+      const cascadePatterns: Record<string, any> = {};
+      const rootCauses: string[] = [];
+
+      // Identify P0 incidents (likely root causes)
+      const criticalIncidents = allWorkItems.filter(
+        (wi: WorkItem) => wi.severity === Severity.P0
+      );
+
+      criticalIncidents.forEach((critical: WorkItem) => {
+        rootCauses.push(critical.componentId);
+
+        // Find incidents created shortly after critical incident
+        const timeWindow = 60000; // 1 minute
+        const relatedIncidents = allWorkItems.filter(
+          (wi: WorkItem) =>
+            wi.componentId !== critical.componentId &&
+            wi.severity !== Severity.P0 &&
+            Math.abs(
+              wi.createdAt.getTime() - critical.createdAt.getTime()
+            ) <= timeWindow
+        );
+
+        cascadePatterns[critical.componentId] = {
+          rootCause: critical.componentId,
+          severity: critical.severity,
+          createdAt: critical.createdAt,
+          relatedIncidents: relatedIncidents.map((wi: WorkItem) => ({
+            componentId: wi.componentId,
+            severity: wi.severity,
+            title: wi.title,
+          })),
+          cascadeDetected: relatedIncidents.length > 0,
+          estimatedBlastRadius: relatedIncidents.length,
+        };
+      });
+
+      res.status(200).json({
+        cascadeAnalysis: {
+          analysisTime: new Date(),
+          totalIncidents: allWorkItems.length,
+          criticalIncidents: criticalIncidents.length,
+          cascadeDetected: rootCauses.length > 0,
+          patterns: cascadePatterns,
+          rootCauses,
+          recommendation:
+            rootCauses.length > 0
+              ? `Focus on resolving: ${rootCauses.join(", ")} to mitigate cascade effects`
+              : "No cascade patterns detected",
+        },
       });
     } catch (error) {
       res.status(500).json({

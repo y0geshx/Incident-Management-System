@@ -157,7 +157,7 @@ export const RCAForm: React.FC<RCAFormProps> = ({
         className="submit-btn"
         disabled={submitting || isLoading}
       >
-        {submitting ? 'Submitting...' : 'Submit RCA & Close Incident'}
+        {submitting ? 'Submitting...' : '✓ Submit RCA & Close Incident'}
       </button>
     </form>
   );

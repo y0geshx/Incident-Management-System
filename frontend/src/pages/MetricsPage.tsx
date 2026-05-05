@@ -144,7 +144,7 @@ export const MetricsPage: React.FC = () => {
   return (
     <div className="metrics-page">
       <header className="metrics-header">
-        <button className="metrics-back-btn" onClick={() => navigate('/')}>Back to Dashboard</button>
+        <button className="metrics-back-btn" onClick={() => navigate('/')}>← Back to Dashboard</button>
         <div>
           <h1>📊 Incident Metrics</h1>
           <p>Monitor incident creation, resolution, severity, and system impact with rich visual summaries.</p>
