@@ -123,7 +123,6 @@ Access the system:
 - **Health**: http://localhost:3001/api/health
 - **OpenAPI**: http://localhost:3001/api/openapi.json
 - **Swagger UI**: http://localhost:3001/api/docs
-- **Docs**: http://localhost:3000/api-docs
 
 ### Option 2: Local Development
 
@@ -372,7 +371,7 @@ npm test -- openapi.test.ts
 ```
 POST /api/signals
   • Ingest a single signal
-  • Rate limited to 10,000/min
+  • Rate limited to 10,000/sec
   • Returns: { signalId, message }
 
 POST /api/signals/batch
