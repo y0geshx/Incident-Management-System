@@ -113,6 +113,9 @@
 
 **System:**
 - `GET /api/health` - Health check with metrics
+- `GET /api/health/quick` - Lightweight API liveness check
+- `GET /api/openapi.json` - OpenAPI specification
+- `GET /api/docs` - Swagger UI documentation
 
 ### 5. Testing ✓
 
@@ -123,6 +126,8 @@
 - ✅ Alert strategy selection
 - ✅ Rate limiter behavior
 - ✅ Debouncer logic
+- ✅ OpenAPI document and docs HTML export
+- ✅ Health check aggregation for operational, degraded, and down states
 
 **Integration Support:**
 - ✅ Sample data generation script
@@ -137,6 +142,7 @@
 - ✅ docs/ARCHITECTURE.md (system design deep dive)
 - ✅ docs/API_EXAMPLES.md (API usage with curl/Python/JS)
 - ✅ docs/DEPLOYMENT.md (deployment guides)
+- ✅ OpenAPI JSON and Swagger UI served from the backend
 - ✅ Backend code comments (inline)
 - ✅ Frontend code comments (inline)
 
@@ -213,15 +219,21 @@ Documentation:
 
 ```bash
 # Quick start
-cd /home/zek/Code/imgassig
+cd /home/zek/Code/ims-dev
 docker-compose up -d
 
 # Generate sample data
 docker-compose exec backend npm run generate-sample-data
 
+# Run backend tests
+cd backend
+npm test -- health-check.test.ts
+npm test openapi.test.ts
+
 # Access
 # Dashboard: http://localhost:3000
 # API: http://localhost:3001/api
+# Docs: http://localhost:3001/api/docs
 # Health: http://localhost:3001/api/health
 ```
 
@@ -253,7 +265,7 @@ docker-compose exec backend npm run generate-sample-data
 ## 📦 File Structure
 
 ```
-imgassig/
+Incident-Management-System/
 ├── backend/
 │   ├── src/
 │   │   ├── types/          # Type definitions
@@ -305,6 +317,7 @@ This is a **production-ready, enterprise-grade Incident Management System** with
 - **Design pattern-driven code** (Strategy + State)
 - **Mandatory RCA workflow** (prevents premature closure)
 - **Real-time dashboard** (React + polling)
+- **Built-in OpenAPI docs** (`/api/openapi.json` and `/api/docs`)
 - **Comprehensive documentation** (architecture, API, deployment)
 - **Full Docker orchestration** (ready for deployment)
 - **Resilience at every layer** (rate limiting, buffering, pooling, caching)
