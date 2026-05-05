@@ -1,5 +1,5 @@
 .incident-card {
-  background: white;
+  background: rgba(255, 255, 255, 0.92);
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
@@ -12,13 +12,13 @@
 }
 
 .incident-card:hover {
-  box-shadow: 0 12px 32px rgba(102, 126, 234, 0.15);
+  box-shadow: 0 16px 34px rgba(51, 87, 101, 0.18);
   transform: translateY(-6px);
-  border-color: #667eea;
+  border-color: var(--coastal-deep);
 }
 
 .incident-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--coastal-deep) 0%, var(--coastal-sage) 55%, var(--coastal-teal) 100%);
   color: white;
   padding: 12px;
   display: flex;
@@ -108,13 +108,13 @@
 }
 
 .incident-body strong {
-  color: #667eea;
+  color: var(--coastal-deep);
 }
 
 .assigned-to-value {
-  color: #10b981;
+  color: var(--coastal-deep);
   font-weight: 600;
-  background: #ecfdf5;
+  background: var(--coastal-sand);
   padding: 2px 6px;
   border-radius: 3px;
 }
@@ -127,12 +127,12 @@
 
 .incident-footer {
   padding: 10px 14px;
-  border-top: 1px solid #e0e0e0;
-  background: #f8f9fa;
+  border-top: 1px solid var(--coastal-border);
+  background: rgba(219, 226, 220, 0.28);
 }
 
 .view-details-btn {
-  background: #667eea;
+  background: linear-gradient(135deg, var(--coastal-deep), var(--coastal-teal));
   color: white;
   width: 100%;
   padding: 8px;
@@ -142,6 +142,6 @@
 }
 
 .view-details-btn:hover {
-  background: #5568d3;
+  background: linear-gradient(135deg, var(--coastal-teal), var(--coastal-deep));
   transform: translateX(2px);
 }

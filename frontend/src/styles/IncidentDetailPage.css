@@ -83,7 +83,7 @@
 
 .back-btn {
   background: #f5f7fa;
-  color: #667eea;
+  color: #335765;
   border: 2px solid #e0e0e0;
   padding: 10px 16px;
   border-radius: 6px;
@@ -95,18 +95,18 @@
 
 .back-btn:hover {
   background: #e0e0e0;
-  border-color: #667eea;
+  border-color: #335765;
 }
 
 .back-btn.primary {
-  background: #667eea;
+  background: #335765;
   color: white;
-  border-color: #667eea;
+  border-color: #335765;
 }
 
 .back-btn.primary:hover {
-  background: #5a67d8;
-  border-color: #5a67d8;
+  background: #2a4556;
+  border-color: #2a4556;
 }
 
 .status-spinner {
@@ -233,14 +233,14 @@
 }
 
 .tab:hover {
-  background: #f5f7fa;
-  color: #667eea;
+  background: rgba(180, 217, 224, 0.18);
+  color: var(--coastal-deep);
 }
 
 .tab.active {
-  color: #667eea;
-  background: #f5f7fa;
-  border-bottom-color: #667eea;
+  color: var(--coastal-deep);
+  background: rgba(180, 217, 224, 0.18);
+  border-bottom-color: var(--coastal-deep);
 }
 
 /* Enhanced Content */
@@ -290,14 +290,14 @@
 }
 
 .metric-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--coastal-deep) 0%, var(--coastal-sage) 55%, var(--coastal-teal) 100%);
   color: white;
   padding: 20px;
   border-radius: 12px;
   display: flex;
   align-items: center;
   gap: 15px;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(51, 87, 101, 0.24);
   transition: transform 0.3s ease;
 }
 

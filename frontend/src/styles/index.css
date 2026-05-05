@@ -1,3 +1,16 @@
+ :root {
+  --coastal-deep: #335765;
+  --coastal-sage: #74A8A4;
+  --coastal-mist: #B6D9E0;
+  --coastal-sand: #DBE2DC;
+  --coastal-teal: #507c7c;
+  --coastal-ink: #22313a;
+  --coastal-muted: #5b6b73;
+  --coastal-surface: #f7f8f6;
+  --coastal-surface-strong: #ffffff;
+  --coastal-border: #d7e4df;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -10,9 +23,13 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background:
+    radial-gradient(circle at top left, rgba(180, 217, 224, 0.5), transparent 36%),
+    radial-gradient(circle at top right, rgba(80, 124, 124, 0.18), transparent 30%),
+    linear-gradient(135deg, #f7f8f6 0%, #dbe2dc 100%);
   min-height: 100vh;
-  color: #333;
+  color: var(--coastal-ink);
+  color-scheme: light;
 }
 
 html, body, #root {
@@ -22,7 +39,7 @@ html, body, #root {
 
 .app {
   min-height: 100vh;
-  background: #f5f7fa;
+  background: transparent;
 }
 
 button {
@@ -44,7 +61,7 @@ button:disabled {
 input, textarea, select {
   font-family: inherit;
   font-size: 13px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--coastal-border);
   border-radius: 4px;
   padding: 6px 8px;
   transition: border-color 0.18s ease;
@@ -52,8 +69,8 @@ input, textarea, select {
 
 input:focus, textarea:focus, select:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: var(--coastal-deep);
+  box-shadow: 0 0 0 3px rgba(51, 87, 101, 0.1);
 }
 
 .error-message {

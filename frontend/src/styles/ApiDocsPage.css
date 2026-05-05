@@ -20,13 +20,13 @@
 }
 
 .api-docs-back-btn {
-  background: #eef2ff;
-  color: #3f51b5;
-  border: 1px solid #c7d2fe;
+  background: rgba(180, 217, 224, 0.2);
+  color: var(--coastal-deep);
+  border: 1px solid var(--coastal-mist);
 }
 
 .api-docs-back-btn:hover {
-  background: #e0e7ff;
+  background: rgba(219, 226, 220, 0.9);
 }
 
 .api-docs-swagger-btn {
