@@ -29,11 +29,11 @@ button {
   cursor: pointer;
   font-family: inherit;
   border: none;
-  padding: 10px 16px;
-  border-radius: 6px;
-  font-size: 14px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 13px;
   font-weight: 500;
-  transition: all 0.3s ease;
+  transition: all 0.18s ease;
 }
 
 button:disabled {
@@ -43,11 +43,11 @@ button:disabled {
 
 input, textarea, select {
   font-family: inherit;
-  font-size: 14px;
+  font-size: 13px;
   border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  padding: 10px 12px;
-  transition: border-color 0.3s ease;
+  border-radius: 4px;
+  padding: 6px 8px;
+  transition: border-color 0.18s ease;
 }
 
 input:focus, textarea:focus, select:focus {
@@ -76,7 +76,7 @@ input:focus, textarea:focus, select:focus {
 
 .loading {
   text-align: center;
-  padding: 40px;
-  font-size: 16px;
+  padding: 20px;
+  font-size: 14px;
   color: #666;
 }
