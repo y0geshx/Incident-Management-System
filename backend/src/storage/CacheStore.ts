@@ -6,6 +6,7 @@
 import { RedisClientType, createClient } from "redis";
 import { randomUUID } from "crypto";
 import { WorkItem, DashboardState, Signal } from "../types";
+import { getDashboardCacheTTLSeconds } from "../config";
 
 export class CacheStore {
   private client: RedisClientType | null = null;
@@ -42,10 +43,15 @@ export class CacheStore {
 
   async setDashboardState(
     state: DashboardState,
-    ttlSeconds: number = 60
+    ttlSeconds?: number
   ): Promise<void> {
     if (!this.client) throw new Error("Not connected to Cache Store");
     const key = "dashboard:state";
+
+    if (ttlSeconds === undefined) {
+      ttlSeconds = getDashboardCacheTTLSeconds();
+    }
+
     await this.client.setEx(key, ttlSeconds, JSON.stringify(state));
   }
 

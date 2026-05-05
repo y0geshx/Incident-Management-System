@@ -151,7 +151,7 @@ Level 1: Browser Cache (Frontend)
 
 Level 2: Redis (Application Cache)
 ├─ Work Items: 300 seconds
-├─ Dashboard State: 60 seconds
+├─ Dashboard State: 3 seconds (configurable via `DASHBOARD_CACHE_TTL_SECONDS`)
 ├─ Signals aggregates: 24 hours
 └─ System health: 5 seconds
 
@@ -183,7 +183,7 @@ Actions:
    
 3. Invalidate Browser Cache
    └─ Fetch new data on next dashboard refresh
-   └─ TTL-based expiration (60s)
+   └─ TTL-based expiration (3s) — configurable via `DASHBOARD_CACHE_TTL_SECONDS`
 
 Eventual Consistency: <2 seconds (typical)
 ```

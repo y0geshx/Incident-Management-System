@@ -228,10 +228,12 @@ Redis Connection Pool: 5 connections
 
 ### 5. **Cache-as-Primary (Hot Path)**
 ```
-Dashboard State: Cached for 60 seconds
+Dashboard State: Cached for 3 seconds
 Work Item Detail: Cached for 300 seconds
 Cache Invalidation: On updates
 ```
+
+Config: Set `DASHBOARD_CACHE_TTL_SECONDS` (seconds) to override the default dashboard cache TTL (default: 3).
 
 **Benefits**:
 - Reduces source of truth queries by 90%
@@ -323,7 +325,7 @@ Constraints: Transactional ACID compliance
 ```
 Keys:
   - work_item:{id}: Current incident state (TTL: 300s)
-  - dashboard:state: Aggregated dashboard (TTL: 60s)
+  - dashboard:state: Aggregated dashboard (TTL: 10s) — configurable via `DASHBOARD_CACHE_TTL_SECONDS`
   - signals:{componentId}:{hour}: Hourly aggregations
   - metric:{name}: System metrics
 ```

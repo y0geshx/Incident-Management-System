@@ -86,16 +86,11 @@
 
 ### 3. Data Handling ✓
 
-**Storage Strategy:**
-- ✅ Raw signals: MongoDB (audit trail, queryable)
-- ✅ Work Items: PostgreSQL (ACID compliance)
-- ✅ RCA Records: PostgreSQL (transactional)
-- ✅ Dashboard Cache: Redis (60s TTL)
-- ✅ Time-series: Redis sorted sets
+ **Storage Strategy:**
+ ✅ Dashboard Cache: Redis (3s TTL) — configurable via `DASHBOARD_CACHE_TTL_SECONDS`
 
 **Data Separation:**
 - Work Items linked to 100+ signals via composite key
-- Signals stored separately for full audit trail
 - RCA records tied to specific Work Item (1:1 relationship)
 - Aggregations computed asynchronously
 
