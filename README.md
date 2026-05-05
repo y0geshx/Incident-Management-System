@@ -92,6 +92,18 @@ flowchart TB
 - **Containerization**: Docker + Docker Compose
 - **Orchestration**: Docker Compose (local) / Kubernetes (production)
 
+## 📚 Docs
+
+The repository includes a [docs/](/docs/) folder with detailed guides and examples:
+
+- [docs/ARCHITECTURE.md](/docs/ARCHITECTURE.md) — System design, diagrams, and component responsibilities.
+- [docs/API_EXAMPLES.md](/docs/API_EXAMPLES.md) — API usage examples (curl, Python, JavaScript).
+- [docs/DEPLOYMENT.md](/docs/DEPLOYMENT.md) — Deployment instructions and Docker Compose reference.
+- [docs/SERVICE_STATUS.md](/docs/SERVICE_STATUS.md) — Service status page implementation and monitoring details.
+- [PROJECT_SUMMARY.md](/PROJECT_SUMMARY.md) — High-level project summary and run/test snippets.
+
+Open these files in the repository or view them rendered in your editor for more details.
+
 ## 🚀 Quick Start
 
 ### Prerequisites
