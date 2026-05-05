@@ -22,6 +22,7 @@ export enum ComponentType {
   ASYNC_QUEUE = "ASYNC_QUEUE",
   RDBMS = "RDBMS",
   NOSQL_STORE = "NOSQL_STORE",
+  MONITORING = "MONITORING",
 }
 
 export enum Severity {

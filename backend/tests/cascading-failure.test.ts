@@ -34,18 +34,18 @@ describe("POST /api/signals/cascading-failure - Cascading Failure Simulation", (
     );
   });
 
-  test("should process cascading failure with 6 signals", async () => {
+  test("should process cascading failure with 20 signals", async () => {
     const response = await request(app).post("/api/signals/cascading-failure");
 
     expect(response.status).toBe(202);
     expect(response.body.message).toContain("Cascading failure signals accepted");
-    expect(response.body.count).toBe(6);
+    expect(response.body.count).toBe(20);
   });
 
-  test("should call processSignal 6 times for each cascading signal", async () => {
+  test("should call processSignal 20 times for each cascading signal", async () => {
     await request(app).post("/api/signals/cascading-failure");
 
-    expect(mockSignalService.processSignal).toHaveBeenCalledTimes(6);
+    expect(mockSignalService.processSignal).toHaveBeenCalledTimes(20);
   });
 
   test("should include RDBMS failure as P0 critical", async () => {
