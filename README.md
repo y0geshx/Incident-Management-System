@@ -388,6 +388,8 @@ GET /api/health
 - Filter by status (OPEN, INVESTIGATING, RESOLVED)
 - Auto-refresh every 5 seconds
 - Signal count per incident
+- Emit Random Signal action to generate and ingest a randomized signal for quick testing
+- Simulate Cascading Failure action to trigger a multi-signal failure scenario and populate related incidents
 
 ### 2. Incident Detail
 - Full incident timeline
