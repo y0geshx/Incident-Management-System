@@ -136,6 +136,17 @@ Access the system:
 - **OpenAPI**: http://localhost:3001/api/openapi.json
 - **Swagger UI**: http://localhost:3001/api/docs
 
+## 🔒 Non-Functional Considerations
+
+The system is designed with operational and platform concerns in mind, not just feature delivery:
+
+- **Security controls** — CORS is enabled at the API layer, request payloads are parsed centrally, and the signal pipeline applies rate limiting to protect the backend from traffic spikes.
+- **Input safety** — Key workflow and RCA paths validate required fields, state transitions, identifiers, and timestamps before data is accepted.
+- **Performance** — Signal debouncing reduces write amplification, Redis caching shortens hot-path reads, and the storage layer uses connection pooling to keep throughput stable under load.
+- **Resilience** — Retry with exponential backoff, cache-based locking, and graceful shutdown handling help the platform recover cleanly from transient failures.
+- **Scalability** — The architecture separates ingestion, persistence, and analytics so each layer can be tuned independently as traffic grows.
+- **Observability** — Health endpoints, OpenAPI docs, structured logging, and rate-limit metrics make the service easier to operate and debug.
+
 ### Option 2: Local Development
 
 ```bash
